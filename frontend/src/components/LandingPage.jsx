@@ -83,15 +83,17 @@ export default function LandingPage({ onEnterDashboard }) {
 
       {/* Main Hero Content */}
       <main className="relative z-10 flex-1 max-w-7xl mx-auto px-6 md:px-12 py-12 md:py-16 flex flex-col items-center justify-center text-center">
-        {/* Top Classified Pill */}
+        {/* Centered Heading Element (from user upload) */}
         <motion.div
-          initial={{ opacity: 0, y: -20 }}
+          initial={{ opacity: 0, y: -15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-950/60 border border-emerald-500/40 text-emerald-300 text-xs font-mono mb-6 shadow-[0_0_15px_rgba(16,185,129,0.2)] backdrop-blur-md"
+          className="inline-flex items-center gap-3 px-6 py-2.5 rounded-full bg-[#04160d]/90 border-2 border-emerald-400 text-emerald-300 text-xs sm:text-sm font-mono font-bold mb-8 shadow-[0_0_30px_rgba(16,185,129,0.45)] backdrop-blur-xl hover:shadow-[0_0_40px_rgba(16,185,129,0.65)] hover:border-emerald-300 transition-all duration-300 select-none"
         >
-          <Fingerprint className="w-3.5 h-3.5 text-emerald-400" />
-          <span>AEGIS VECTOR CORRELATION ENGINE &bull; STYLOMETRIC NLP</span>
+          <Fingerprint className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400 flex-shrink-0 animate-pulse" />
+          <span className="tracking-wide">
+            AEGIS VECTOR CORRELATION ENGINE &bull; STYLOMETRIC NLP
+          </span>
         </motion.div>
 
         {/* Brand Name Headline */}
