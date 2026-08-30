@@ -1,5 +1,19 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Shield, Radio, Search, Terminal, Database, Activity, RefreshCw, Cpu, ExternalLink } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  Shield, 
+  Radio, 
+  Search, 
+  Terminal, 
+  Database, 
+  Activity, 
+  RefreshCw, 
+  Cpu, 
+  ExternalLink,
+  Home,
+  ArrowLeft
+} from 'lucide-react';
+import LandingPage from './components/LandingPage';
 import Graph from './components/Graph';
 import ThresholdSlider from './components/ThresholdSlider';
 import EvidencePanel from './components/EvidencePanel';
@@ -8,7 +22,10 @@ import InjectButton from './components/InjectButton';
 import { fetchGraph, fetchAliasDetail, resolveAlias, injectAlias, resetDemo } from './api/client';
 
 export default function App() {
-  // State
+  // Navigation State: 'landing' | 'dashboard'
+  const [currentView, setCurrentView] = useState('landing');
+
+  // Graph State
   const [threshold, setThreshold] = useState(0.62);
   const [graphData, setGraphData] = useState({ nodes: [], edges: [], clusters: [], staged_aliases: [] });
   const [loading, setLoading] = useState(true);
@@ -115,10 +132,8 @@ export default function App() {
       const res = await injectAlias();
       if (res?.injected_alias_id) {
         setRecentlyInjectedId(res.injected_alias_id);
-        // Reload full graph to show newly connected edges
         await loadGraph(threshold);
 
-        // Auto-select the injected node after a brief delay
         setTimeout(() => {
           const targetNode = graphData.nodes.find(n => n.id === res.injected_alias_id);
           if (targetNode) {
@@ -126,7 +141,6 @@ export default function App() {
           }
         }, 300);
 
-        // Clear injection pulse after 5s
         setTimeout(() => setRecentlyInjectedId(null), 5000);
       }
       return res;
@@ -152,11 +166,26 @@ export default function App() {
     n.platform.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  // Render Landing Page if view is 'landing'
+  if (currentView === 'landing') {
+    return <LandingPage onEnterDashboard={() => setCurrentView('dashboard')} />;
+  }
+
+  // Otherwise render the full SOC Resolution Dashboard
   return (
     <div className="flex flex-col h-screen w-screen bg-[#0a0a0f] text-gray-100 overflow-hidden font-sans">
       {/* Top Threat-Intel Header Bar */}
       <header className="h-14 bg-[#0d0d14] border-b border-[#1e1e2f] px-5 flex items-center justify-between z-30 flex-shrink-0">
         <div className="flex items-center gap-3">
+          <button
+            onClick={() => setCurrentView('landing')}
+            title="Return to Home Overview"
+            className="flex items-center gap-1.5 px-2.5 py-1 bg-[#151522] hover:bg-[#1f1f32] border border-[#252538] hover:border-cyan-500/40 text-gray-300 hover:text-cyan-300 rounded-lg text-xs font-mono transition-colors mr-1 cursor-pointer"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Home</span>
+          </button>
+
           <div className="w-8 h-8 rounded-lg bg-cyan-950/80 border border-cyan-500/40 flex items-center justify-center text-cyan-400 shadow-inner">
             <Shield className="w-4 h-4" />
           </div>
@@ -176,22 +205,22 @@ export default function App() {
         </div>
 
         {/* Live System Status Badges */}
-        <div className="flex items-center gap-4 text-xs font-mono">
+        <div className="flex items-center gap-3 md:gap-4 text-xs font-mono">
           <div className="flex items-center gap-2 bg-[#12121e] px-3 py-1.5 rounded-lg border border-[#1e1e2f]">
             <Radio className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
-            <span className="text-gray-400">Backend:</span>
+            <span className="text-gray-400 hidden sm:inline">Backend:</span>
             <span className="text-emerald-400 font-semibold">FastAPI Online</span>
           </div>
 
           <div className="flex items-center gap-2 bg-[#12121e] px-3 py-1.5 rounded-lg border border-[#1e1e2f]">
             <Database className="w-3.5 h-3.5 text-cyan-400" />
-            <span className="text-gray-400">Active Aliases:</span>
+            <span className="text-gray-400 hidden sm:inline">Active Aliases:</span>
             <span className="text-cyan-400 font-bold">{graphData.nodes.length}</span>
           </div>
 
           <div className="flex items-center gap-2 bg-[#12121e] px-3 py-1.5 rounded-lg border border-[#1e1e2f]">
             <Activity className="w-3.5 h-3.5 text-purple-400" />
-            <span className="text-gray-400">Clusters:</span>
+            <span className="text-gray-400 hidden sm:inline">Clusters:</span>
             <span className="text-purple-400 font-bold">{graphData.clusters.length}</span>
           </div>
         </div>
