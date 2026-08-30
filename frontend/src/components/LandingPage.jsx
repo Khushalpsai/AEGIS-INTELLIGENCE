@@ -24,15 +24,15 @@ export default function LandingPage({ onEnterDashboard }) {
     <div className="relative min-h-screen w-full bg-[#030704] text-gray-100 overflow-x-hidden font-sans select-none flex flex-col justify-between">
       {/* Fullscreen Matrix Skull Background with Cyber Vignette */}
       <div 
-        className="absolute inset-0 bg-center bg-no-repeat bg-cover pointer-events-none opacity-30 filter contrast-150 saturate-150"
+        className="absolute inset-0 bg-center bg-no-repeat bg-cover pointer-events-none opacity-65 filter contrast-125 brightness-105 saturate-125"
         style={{
           backgroundImage: `url('/matrix-skull.png')`,
         }}
       />
 
       {/* Matrix Green Scanlines & Radial Gradients */}
-      <div className="absolute inset-0 bg-gradient-to-b from-[#030704]/90 via-[#030704]/60 to-[#030704]/95 pointer-events-none" />
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(3,7,4,0.85)_100%)] pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-b from-[#030704]/70 via-[#030704]/35 to-[#030704]/85 pointer-events-none" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(3,7,4,0.75)_100%)] pointer-events-none" />
       
       {/* Matrix Grid Lines */}
       <div 
