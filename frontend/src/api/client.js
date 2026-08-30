@@ -1,0 +1,74 @@
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+
+/**
+ * Fetch graph nodes and edges at specified similarity threshold.
+ */
+export async function fetchGraph(threshold = 0.62) {
+  const res = await fetch(`${BASE_URL}/graph?threshold=${threshold}`);
+  if (!res.ok) {
+    throw new Error(`Failed to fetch graph: ${res.statusText}`);
+  }
+  return await res.json();
+}
+
+/**
+ * Fetch all aliases list.
+ */
+export async function fetchAliases(includeStaged = false) {
+  const res = await fetch(`${BASE_URL}/aliases?include_staged=${includeStaged}`);
+  if (!res.ok) {
+    throw new Error(`Failed to fetch aliases: ${res.statusText}`);
+  }
+  return await res.json();
+}
+
+/**
+ * Fetch full profile and post history for a single alias.
+ */
+export async function fetchAliasDetail(aliasId) {
+  const res = await fetch(`${BASE_URL}/aliases/${aliasId}`);
+  if (!res.ok) {
+    throw new Error(`Failed to fetch alias detail for ${aliasId}: ${res.statusText}`);
+  }
+  return await res.json();
+}
+
+/**
+ * Resolve an alias into its cluster, intra-cluster confidence, and pairwise matches with evidence.
+ */
+export async function resolveAlias(aliasId, threshold = 0.62) {
+  const res = await fetch(`${BASE_URL}/resolve/${aliasId}?threshold=${threshold}`);
+  if (!res.ok) {
+    throw new Error(`Failed to resolve alias ${aliasId}: ${res.statusText}`);
+  }
+  return await res.json();
+}
+
+/**
+ * Demo: Inject held-back staged alias into live graph.
+ */
+export async function injectAlias(aliasId = null) {
+  const body = aliasId ? JSON.stringify({ alias_id: aliasId }) : undefined;
+  const res = await fetch(`${BASE_URL}/inject`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body
+  });
+  if (!res.ok) {
+    throw new Error(`Failed to inject alias: ${res.statusText}`);
+  }
+  return await res.json();
+}
+
+/**
+ * Demo: Reset the environment state back to initial (holding back staged aliases).
+ */
+export async function resetDemo() {
+  const res = await fetch(`${BASE_URL}/reset-demo`, {
+    method: 'POST'
+  });
+  if (!res.ok) {
+    throw new Error(`Failed to reset demo: ${res.statusText}`);
+  }
+  return await res.json();
+}
