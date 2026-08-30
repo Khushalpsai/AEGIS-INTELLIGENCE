@@ -192,7 +192,7 @@ export default function App() {
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-sm font-bold tracking-wider text-white uppercase font-mono">
-                Dark-Web Identity Resolution Engine
+                AEGIS-INTELLIGENCE // THREAT IDENTITY RESOLUTION
               </h1>
               <span className="text-[10px] font-mono bg-cyan-950/60 text-cyan-400 px-2 py-0.5 rounded border border-cyan-800/40">
                 v1.0-MVP
