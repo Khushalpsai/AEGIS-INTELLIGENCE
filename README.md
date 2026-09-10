@@ -11,7 +11,7 @@ E:\SIH PROJECT
 ├── backend/
 │   ├── app/
 │   │   ├── data/
-│   │   │   ├── personas.json            # Ground-truth synthetic dark-web dataset
+│   │   │   ├── personas.json            # Ground-truth synthetic dark-web dataset (20 personas)
 │   │   │   └── similarity_matrix.json   # Precomputed embeddings & stylometric evidence
 │   │   ├── routers/
 │   │   │   ├── aliases.py               # GET /aliases, GET /aliases/{id}
@@ -29,6 +29,7 @@ E:\SIH PROJECT
 │   │   │   ├── Graph.jsx                # 2D Force Graph with collision avoidance & spotlight glow
 │   │   │   ├── ThresholdSlider.jsx      # Dynamic resolution slider (0.30 - 0.95)
 │   │   │   ├── EvidencePanel.jsx        # Right slide-in dossier & stylometric evidence panel
+│   │   │   ├── InvestigationMode.jsx    # Analyst workflow (Selection, Candidates, Report)
 │   │   │   ├── AliasDetail.jsx          # Alias profile & post timeline
 │   │   │   ├── ClusterCards.jsx         # Bottom strip of resolved clusters with border-beam glow
 │   │   │   └── InjectButton.jsx         # Live alias injection demo button
@@ -69,4 +70,5 @@ npm run dev
 - **Zero Live Inference Latency**: Precomputed similarity matrices and stylometric features ensure instant, responsive filtering on stage.
 - **Dynamic Threshold Slider**: Real-time connected-components clustering (`0.50` to `0.85`), with optimal resolution baseline at `0.62`.
 - **Explainable Evidence**: Quantifies shared n-grams, sentence length variance, and punctuation profile similarity per match.
+- **Analyst Investigation Mode**: A dedicated, structured workflow for threat analysts to select an alias, generate high-confidence candidates, compare stylometric evidence side-by-side, and generate an intelligence report.
 - **Staged Alias Injection**: Demonstrates real-time threat alias ingestion and automated cluster assignment on the fly.
