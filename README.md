@@ -69,6 +69,8 @@ npm run dev
 ## ⚡ Key Capabilities
 - **Zero Live Inference Latency**: Precomputed similarity matrices and stylometric features ensure instant, responsive filtering on stage.
 - **Dynamic Threshold Slider**: Real-time connected-components clustering (`0.50` to `0.85`), with optimal resolution baseline at `0.62`.
-- **Explainable Evidence**: Quantifies shared n-grams, sentence length variance, and punctuation profile similarity per match.
 - **Analyst Investigation Mode**: A dedicated, structured workflow for threat analysts to select an alias, generate high-confidence candidates, compare stylometric evidence side-by-side, and generate an intelligence report.
+- **"Explain This Link" Pairwise Evidence**: Clicking any edge provides an explainable breakdown of the correlation using granular signals (Semantic, Lexical, Syntactic, Punctuation, Temporal), supporting vs. contradictory evidence, and pairwise statistics.
+- **Threat Actor Evolution Timeline**: Automatically maps out historical post activity to visually determine if connected aliases operated concurrently or represent a sequential identity handover.
+- **Confidence Scoring**: Translates raw mathematical similarity into actionable intelligence classifications (Weak, Possible, Probable, High-Confidence Linkage).
 - **Staged Alias Injection**: Demonstrates real-time threat alias ingestion and automated cluster assignment on the fly.

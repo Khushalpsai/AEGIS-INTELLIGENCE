@@ -2,6 +2,88 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, ChevronRight, Fingerprint, ShieldAlert, FileText, CheckCircle2, FileSearch, ArrowLeft, Download } from 'lucide-react';
 import { resolveAlias, fetchAliasDetail } from '../api/client';
+const TemporalTimeline = ({ targetPosts, candidatePosts, targetId, candidateId }) => {
+  if (!targetPosts?.length || !candidatePosts?.length) return null;
+
+  const allPosts = [...targetPosts, ...candidatePosts];
+  const timestamps = allPosts.map(p => new Date(p.timestamp).getTime()).filter(t => !isNaN(t));
+  if (timestamps.length === 0) return null;
+
+  const minTime = Math.min(...timestamps);
+  const maxTime = Math.max(...timestamps);
+  
+  const pad = (maxTime - minTime) * 0.1 || 86400000 * 7; 
+  const start = minTime - pad;
+  const end = maxTime + pad;
+  const range = end - start;
+
+  const getPosition = (ts) => ((new Date(ts).getTime() - start) / range) * 100;
+
+  const targetDates = targetPosts.map(p => new Date(p.timestamp).getTime()).filter(t => !isNaN(t));
+  const candidateDates = candidatePosts.map(p => new Date(p.timestamp).getTime()).filter(t => !isNaN(t));
+  
+  const minTarget = Math.min(...targetDates);
+  const maxTarget = Math.max(...targetDates);
+  const minCandidate = Math.min(...candidateDates);
+  const maxCandidate = Math.max(...candidateDates);
+
+  const overlapStart = Math.max(minTarget, minCandidate);
+  const overlapEnd = Math.min(maxTarget, maxCandidate);
+  const hasOverlap = overlapStart <= overlapEnd;
+
+  return (
+    <div className="w-full">
+      <div className="flex justify-between text-[10px] text-gray-500 font-mono mb-2">
+        <span>{new Date(start).toLocaleDateString()}</span>
+        <span>{new Date(end).toLocaleDateString()}</span>
+      </div>
+      <div className="relative h-16 bg-[#161726] border border-[#282942] rounded-lg overflow-hidden">
+        {hasOverlap && (
+          <div 
+            className="absolute top-0 bottom-0 bg-cyan-900/20 border-x border-cyan-500/30"
+            style={{ 
+              left: `${getPosition(overlapStart)}%`, 
+              width: `${getPosition(overlapEnd) - getPosition(overlapStart)}%` 
+            }}
+          />
+        )}
+        
+        <div className="absolute top-1/2 left-0 right-0 h-px bg-[#282942]" />
+
+        <div className="absolute top-0 left-0 right-0 h-1/2">
+          <div className="absolute left-2 top-1 text-[9px] font-mono text-cyan-500/50">{targetId}</div>
+          {targetPosts.map((p, i) => (
+            <div 
+              key={`t-${i}`}
+              className="absolute top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-cyan-400 rounded-full shadow-[0_0_5px_rgba(34,211,238,0.8)]"
+              style={{ left: `${getPosition(p.timestamp)}%` }}
+              title={new Date(p.timestamp).toLocaleDateString()}
+            />
+          ))}
+        </div>
+
+        <div className="absolute bottom-0 left-0 right-0 h-1/2">
+          <div className="absolute left-2 bottom-1 text-[9px] font-mono text-rose-500/50">{candidateId}</div>
+          {candidatePosts.map((p, i) => (
+            <div 
+              key={`c-${i}`}
+              className="absolute top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-rose-400 rounded-full shadow-[0_0_5px_rgba(251,113,133,0.8)]"
+              style={{ left: `${getPosition(p.timestamp)}%` }}
+              title={new Date(p.timestamp).toLocaleDateString()}
+            />
+          ))}
+        </div>
+      </div>
+      <div className="mt-2 text-xs font-mono text-gray-400 text-center">
+        {hasOverlap ? (
+          <span className="text-cyan-400 bg-cyan-900/30 px-2 py-0.5 rounded border border-cyan-800/40">Concurrent Activity Overlap Detected</span>
+        ) : (
+          <span className="text-amber-400 bg-amber-900/30 px-2 py-0.5 rounded border border-amber-800/40">Sequential Handover (No Overlap)</span>
+        )}
+      </div>
+    </div>
+  );
+};
 
 export default function InvestigationMode({ allNodes, onExit }) {
   const [step, setStep] = useState(1);
@@ -37,9 +119,17 @@ export default function InvestigationMode({ allNodes, onExit }) {
   };
 
   // Step 3: Select Candidate
-  const handleSelectCandidate = (candidate) => {
-    setSelectedCandidate(candidate);
-    setStep(4);
+  const handleSelectCandidate = async (candidate) => {
+    setIsResolving(true);
+    try {
+      const detail = await fetchAliasDetail(candidate.target_alias_id);
+      setSelectedCandidate({ ...candidate, detail });
+      setStep(4);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsResolving(false);
+    }
   };
 
   // Step 5: Generate Report
@@ -235,13 +325,15 @@ export default function InvestigationMode({ allNodes, onExit }) {
                     </div>
                   </div>
 
-                  {/* Temporal Behavior Component Placeholder */}
+                  {/* Temporal Behavior Component */}
                   <div>
-                    <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider font-mono border-b border-[#1e1e2f] pb-2 mb-3">Temporal Behavior</h4>
-                    <div className="p-4 border border-[#1e1e2f] bg-[#0d0d16] rounded-xl flex items-center justify-between">
-                       <span className="text-sm text-gray-400">Activity overlap analysis indicates aligned timezone windows (UTC+0 to UTC+3).</span>
-                       <span className="text-cyan-400 font-mono text-xs bg-cyan-900/30 px-2 py-1 rounded border border-cyan-800/40">Pattern Match</span>
-                    </div>
+                    <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider font-mono border-b border-[#1e1e2f] pb-2 mb-3">Temporal Evolution Timeline</h4>
+                    <TemporalTimeline 
+                      targetPosts={aliasDetail?.posts}
+                      candidatePosts={selectedCandidate.detail?.posts}
+                      targetId={selectedAliasId}
+                      candidateId={selectedCandidate.target_alias_id}
+                    />
                   </div>
 
                 </div>
@@ -307,6 +399,16 @@ export default function InvestigationMode({ allNodes, onExit }) {
                     <li><strong>Shared Vocabulary:</strong> The subjects utilize unique lexical collocations including: {selectedCandidate.evidence?.shared_phrases?.join(', ')}.</li>
                     <li><strong>Syntactic Fingerprint:</strong> The sentence length variance is highly correlated with a delta of &plusmn;{selectedCandidate.evidence?.sentence_length_delta} words.</li>
                     <li><strong>Punctuation Profile:</strong> A {((selectedCandidate.evidence?.punctuation_similarity || 0) * 100).toFixed(1)}% match in punctuation distributions indicates shared subconscious typing habits.</li>
+                    <li><strong>Temporal Evolution:</strong> Timeline analysis indicates {
+                      (()=>{
+                        const t1 = aliasDetail?.posts?.map(p=>new Date(p.timestamp).getTime()) || [];
+                        const c1 = selectedCandidate.detail?.posts?.map(p=>new Date(p.timestamp).getTime()) || [];
+                        const minT = Math.min(...t1), maxT = Math.max(...t1);
+                        const minC = Math.min(...c1), maxC = Math.max(...c1);
+                        if (Math.max(minT, minC) <= Math.min(maxT, maxC)) return 'a period of concurrent alias operation.';
+                        return 'a sequential transition between aliases with no overlap.';
+                      })()
+                    }</li>
                   </ul>
                 </div>
 
