@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import InvestigationMode from './components/InvestigationMode';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Shield, 
@@ -166,9 +167,14 @@ export default function App() {
     n.platform.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+// ... (in App component)
   // Render Landing Page if view is 'landing'
   if (currentView === 'landing') {
     return <LandingPage onEnterDashboard={() => setCurrentView('dashboard')} />;
+  }
+
+  if (currentView === 'investigation') {
+    return <InvestigationMode allNodes={graphData.nodes} onExit={() => setCurrentView('dashboard')} />;
   }
 
   // Otherwise render the full SOC Resolution Dashboard
@@ -255,6 +261,22 @@ export default function App() {
               onInject={handleInject}
               onReset={handleReset}
             />
+          </div>
+
+          {/* Investigation Mode Toggle */}
+          <div className="bg-[#101018]/90 border border-[#1e1e2f] p-3.5 rounded-xl space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold uppercase tracking-wider text-gray-300">
+                Analyst Workflow
+              </span>
+            </div>
+            <button 
+              onClick={() => setCurrentView('investigation')}
+              className="w-full flex items-center justify-center gap-2 py-2 bg-[#151624] hover:bg-[#1a1b2e] border border-cyan-500/30 hover:border-cyan-400 rounded-lg text-cyan-400 font-mono text-xs font-bold transition-all shadow-[0_0_10px_rgba(6,182,212,0.1)] hover:shadow-[0_0_15px_rgba(6,182,212,0.2)]"
+            >
+              <Search className="w-4 h-4" />
+              Start Investigation Mode
+            </button>
           </div>
 
           {/* Search & Alias Directory */}

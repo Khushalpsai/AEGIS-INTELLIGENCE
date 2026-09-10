@@ -77,16 +77,10 @@ To guarantee instant UI responsiveness and eliminate live GPU bottlenecks during
 ## 🛠️ 5. What Exactly We Built
 
 ### 1. The Threat Persona & Ground-Truth Dataset
-- Hand-crafted synthetic dataset with **8 distinct threat actor archetypes** (18 aliases, 80+ posts):
-  - **Persona 1 (Exploit Developer)**: Slang-heavy 0-day broker (`ShadowX`, `shadow_x`, `sh4d0w`).
-  - **Persona 2 (Enterprise Escrow Vendor)**: Legalistic, formal business tone with semicolons (`CipherTrade`, `ct_official`).
-  - **Persona 3 (Loader / Botnet Developer)**: Eastern European ESL syntax with `my friend` cadence (`volk_admin`, `wolfpack99`, `v0lk`).
-  - **Persona 4 (Script Kiddie / Defacer)**: Chaotic, ALL-CAPS bursts and exclamation marks (`xpl0it_k1ng`, `hackmaster2k`).
-  - **Persona 5 (OPSEC Consultant / Auditor)**: Numbered steps, em-dashes, and rigorous security terminology (`null_ptr`, `devnull_sec`).
-  - **Persona 6 (Chill Dark-Web Dealer)**: Relaxed conversational cadence (`greenlight`, `gl_supplies`).
-  - **Decoy Persona 7 (Crypto Hype Moonboy)**: Speculative degen hype (`cryptowave`, `wave_rider`).
-  - **Decoy Persona 8 (Crypto Quantitative Analyst)**: Econometric DeFi and liquidity pool analysis (`blockanalyst`, `ba_research`).
-- **Decoy Isolation**: P7 and P8 both discuss cryptocurrency, but their stylometric variance produces low similarity (`~0.18`), mathematically proving our system distinguishes style over simple keyword matching.
+- Hand-crafted synthetic dataset with **20 distinct archetypes** (31 aliases, 100+ posts):
+  - **Threat Actors (Core Targets)**: Exploit Developer (`ShadowX`), Enterprise Escrow Vendor (`CipherTrade`), Botnet Developer (`volk_admin`), Script Kiddie (`xpl0it_k1ng`), OPSEC Consultant (`null_ptr`), Ransomware Negotiator (`LockSupport`), Initial Access Broker (`AccessKing`), Carding/Fraud Specialist (`PlasticGod`).
+  - **Background Noise (Normal Users)**: Laid-back Dark-Web Dealer, Tech Support, Hardcore Gamer, Fitness Enthusiast, Student/Academic, Web Developer, Photography Hobbyist, Car Enthusiast, Conspiracy Theorist.
+  - **Decoy Archetypes**: Speculative Crypto Moonboy vs Quantitative Crypto Analyst (Proves the system distinguishes analytical style over simple keyword matching, as both discuss cryptocurrency but maintain distinct stylometric profiles).
 
 ### 2. High-Performance FastAPI Backend
 - `GET /aliases`: Enumerates all monitored handles and platform origins.
@@ -106,6 +100,8 @@ To guarantee instant UI responsiveness and eliminate live GPU bottlenecks during
 - **Slide-in Evidence & Dossier Panel (Framer Motion)**:
   - Node Mode: Threat actor alias profile, platform badge, and full post timeline.
   - Edge Mode: Pairwise stylometric similarity gauge, top score drivers, shared n-grams, sentence length delta, and punctuation profile match.
+- **Analyst Investigation Mode**: A structured 4-step intelligence workflow designed for analysts.
+  - Target Selection -> Candidate Generation -> Evidence Comparison (Semantics, Syntax, Punctuation, Vocabulary, Temporal) -> Automated Intelligence Report Generation.
 - **Resolved Cluster Summary Strip**: Aceternity-inspired glowing border-beam cards displaying cluster ID, alias count, and confidence percentage (with singletons clearly labeled as *Unmatched*).
 
 ---

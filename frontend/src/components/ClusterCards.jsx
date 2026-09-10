@@ -43,24 +43,15 @@ export default function ClusterCards({ clusters = [], selectedClusterId = null, 
             <div
               key={cluster.cluster_id}
               onClick={() => onSelectCluster && onSelectCluster(isSelected ? null : cluster.cluster_id)}
-              className={`relative flex-shrink-0 w-[240px] p-3 rounded-xl cursor-pointer transition-all duration-200 border-beam-container ${
+              className={`relative flex-shrink-0 w-[240px] p-3 rounded-xl cursor-pointer transition-all duration-200 ${
                 isSelected
-                  ? 'bg-[#161626] border-2 shadow-lg shadow-cyan-500/20'
+                  ? 'bg-[#161626] border-2'
                   : 'bg-[#10101a] hover:bg-[#141422] border border-[#1e1e2f] hover:border-[#2e2e46]'
               }`}
               style={{
                 borderColor: isSelected ? color : undefined
               }}
             >
-              {/* Aceternity Glowing Border Beam for Resolved Multi-Alias Clusters */}
-              {isMulti && (
-                <div
-                  className="absolute inset-0 rounded-xl pointer-events-none opacity-40 hover:opacity-100 transition-opacity"
-                  style={{
-                    background: `radial-gradient(circle at 50% 0%, ${color}33 0%, transparent 70%)`
-                  }}
-                />
-              )}
 
               <div className="relative z-10 space-y-2">
                 {/* Header */}

@@ -36,8 +36,8 @@ export async function fetchAliasDetail(aliasId) {
 /**
  * Resolve an alias into its cluster, intra-cluster confidence, and pairwise matches with evidence.
  */
-export async function resolveAlias(aliasId, threshold = 0.62) {
-  const res = await fetch(`${BASE_URL}/resolve/${aliasId}?threshold=${threshold}`);
+export async function resolveAlias(aliasId, threshold = 0.62, compareAll = false) {
+  const res = await fetch(`${BASE_URL}/resolve/${aliasId}?threshold=${threshold}&compare_all=${compareAll}`);
   if (!res.ok) {
     throw new Error(`Failed to resolve alias ${aliasId}: ${res.statusText}`);
   }
