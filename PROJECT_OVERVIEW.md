@@ -33,7 +33,10 @@ In the cyber threat landscape, malicious actors rarely operate under a single id
 - **Stylometric Feature Extraction**: Combines deep transformer-based semantic embeddings with statistical lexical markers (signature slang n-grams, sentence length cadences, and punctuation profile distributions).
 - **Dynamic Topological Graphing**: Interactive force-directed network graph where clusters represent resolved threat actors, and edges represent mathematically verified stylometric correlations.
 - **Adjustable Confidence Thresholding**: Analysts can dynamically tune correlation sensitivity (`0.30` to `0.95`, with optimal resolution at `0.62`), watching clusters merge or fracture in real time with **zero live inference latency**.
-- **Transparent, Explainable Evidence Dossier**: Clicking any edge provides forensic attribution metrics explaining *why* two handles are linked (shared lexical collocations, variance in sentence length, and syntax matching).
+- **Analyst Investigation Mode**: A structured intelligence workflow guiding analysts from target selection to automated candidate correlation, ending with a detailed Intelligence Report.
+- **"Explain This Link" Evidence Dossier**: Clicking any edge provides an explainable breakdown of the correlation using granular signals (Semantic, Lexical, Syntactic, Punctuation, Temporal), supporting vs. contradictory evidence, and pairwise statistics.
+- **Threat Actor Evolution Timeline**: Automatically maps out historical post activity to determine if connected aliases operated concurrently or represent a sequential identity handover.
+- **Confidence Scoring System**: Translates raw mathematical similarity into actionable intelligence classifications (Weak, Possible, Probable, High-Confidence).
 - **Staged Real-Time Threat Ingestion**: Simulates active intelligence ingestion, where newly monitored handles are added to the live graph and automatically resolve into their corresponding threat clusters.
 
 ---

@@ -72,3 +72,14 @@ export async function resetDemo() {
   }
   return await res.json();
 }
+
+/**
+ * Explain a pairwise link between two aliases in detail.
+ */
+export async function fetchExplanation(aliasA, aliasB) {
+  const res = await fetch(`${BASE_URL}/explain/${aliasA}/${aliasB}`);
+  if (!res.ok) {
+    throw new Error(`Failed to explain link ${aliasA}-${aliasB}: ${res.statusText}`);
+  }
+  return await res.json();
+}
