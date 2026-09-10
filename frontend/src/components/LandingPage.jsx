@@ -46,30 +46,14 @@ export default function LandingPage({ onEnterDashboard }) {
       {/* Top Cyber Navigation Bar */}
       <header className="relative z-20 h-16 border-b border-emerald-900/40 bg-[#040905]/80 backdrop-blur-md px-6 md:px-12 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-emerald-950/80 border border-emerald-500/50 flex items-center justify-center text-emerald-400">
-            <Crosshair className="w-5 h-5 text-emerald-400 animate-pulse" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="font-mono text-sm font-extrabold tracking-widest text-emerald-400 uppercase">
-                AEGIS-INTELLIGENCE
-              </span>
-              <span className="font-mono text-[10px] bg-emerald-950/90 text-emerald-300 border border-emerald-500/40 px-2 py-0.5 rounded-full flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-                ACTIVE DEFENSE
-              </span>
-            </div>
-            <p className="text-[10px] text-emerald-600 font-mono tracking-wider">
-              TACTICAL THREAT IDENTITY RESOLUTION &bull; CLASSIFIED
-            </p>
+          <div className="font-mono text-emerald-400 font-bold tracking-widest text-sm flex items-center gap-2 bg-emerald-950/40 px-4 py-2 rounded-lg border border-emerald-900/50">
+             <Terminal className="w-4 h-4" />
+             Team name: LeaveLeave
           </div>
         </div>
 
         <div className="flex items-center gap-4">
-          <div className="hidden md:flex items-center gap-2 font-mono text-xs text-emerald-500/80 bg-[#061208] px-3 py-1.5 rounded-lg border border-emerald-800/40">
-            <Radio className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
-            <span>RADAR: <strong className="text-emerald-300">LIVE FEED</strong></span>
-          </div>
+          {/* Radar Live Feed removed as requested */}
 
           <button
             onClick={onEnterDashboard}
@@ -83,18 +67,7 @@ export default function LandingPage({ onEnterDashboard }) {
 
       {/* Main Hero Content */}
       <main className="relative z-10 flex-1 max-w-7xl mx-auto px-6 md:px-12 py-12 md:py-16 flex flex-col items-center justify-center text-center">
-        {/* Centered Heading Element (from user upload) */}
-        <motion.div
-          initial={{ opacity: 0, y: -15 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="inline-flex items-center gap-3 px-6 py-2.5 rounded-full bg-[#04160d]/90 border-2 border-emerald-400 text-emerald-300 text-xs sm:text-sm font-mono font-bold mb-8 backdrop-blur-xl hover:border-emerald-300 transition-all duration-300 select-none"
-        >
-          <Fingerprint className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400 flex-shrink-0 animate-pulse" />
-          <span className="tracking-wide">
-            AEGIS VECTOR CORRELATION ENGINE &bull; STYLOMETRIC NLP
-          </span>
-        </motion.div>
+        {/* Centered Heading Element removed as requested */}
 
         {/* Brand Name Headline */}
         <motion.div
@@ -142,67 +115,21 @@ export default function LandingPage({ onEnterDashboard }) {
           </button>
         </motion.div>
 
-        {/* 3 Green Matrix Feature Pillar Cards */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.4 }}
-          className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full text-left"
-        >
-          {/* Card 1 */}
-          <div className="bg-[#050e07]/85 backdrop-blur-md border border-emerald-800/40 hover:border-emerald-500/60 p-5 rounded-xl transition-all duration-300 space-y-2 group">
-            <div className="w-8 h-8 rounded-lg bg-emerald-950/80 border border-emerald-500/40 flex items-center justify-center text-emerald-400 mb-3 group-hover:scale-110 transition-transform">
-              <Fingerprint className="w-4 h-4" />
-            </div>
-            <h3 className="font-mono text-sm font-bold text-white group-hover:text-emerald-300 transition-colors">
-              Stylometric NLP Profiling
-            </h3>
-            <p className="text-xs text-gray-400 leading-relaxed">
-              Extracts semantic embeddings, slang n-grams, sentence length delta, and punctuation cadence via <code className="text-emerald-400 font-mono">all-MiniLM-L6-v2</code>.
-            </p>
-          </div>
-
-          {/* Card 2 */}
-          <div className="bg-[#050e07]/85 backdrop-blur-md border border-emerald-800/40 hover:border-emerald-500/60 p-5 rounded-xl transition-all duration-300 space-y-2 group">
-            <div className="w-8 h-8 rounded-lg bg-emerald-950/80 border border-emerald-500/40 flex items-center justify-center text-emerald-400 mb-3 group-hover:scale-110 transition-transform">
-              <Network className="w-4 h-4" />
-            </div>
-            <h3 className="font-mono text-sm font-bold text-white group-hover:text-emerald-300 transition-colors">
-              Force-Directed Topology
-            </h3>
-            <p className="text-xs text-gray-400 leading-relaxed">
-              Interactive 2D graph with dynamic confidence threshold filtering, collision avoidance, and intelligence cards.
-            </p>
-          </div>
-
-          {/* Card 3 */}
-          <div className="bg-[#050e07]/85 backdrop-blur-md border border-emerald-800/40 hover:border-emerald-500/60 p-5 rounded-xl transition-all duration-300 space-y-2 group">
-            <div className="w-8 h-8 rounded-lg bg-emerald-950/80 border border-emerald-500/40 flex items-center justify-center text-emerald-400 mb-3 group-hover:scale-110 transition-transform">
-              <Zap className="w-4 h-4" />
-            </div>
-            <h3 className="font-mono text-sm font-bold text-white group-hover:text-emerald-300 transition-colors">
-              Staged Threat Ingestion
-            </h3>
-            <p className="text-xs text-gray-400 leading-relaxed">
-              Simulate live dark-web alias ingestion in real time. Watch rogue handles resolve automatically into their verified threat clusters.
-            </p>
-          </div>
-        </motion.div>
+        {/* 3 Green Matrix Feature Pillar Cards removed as requested */}
       </main>
 
-      {/* Cyber Threat Intel Footer */}
-      <footer className="relative z-20 border-t border-emerald-900/40 bg-[#030804]/90 px-6 md:px-12 py-4 flex flex-col sm:flex-row items-center justify-between text-xs font-mono text-emerald-600 gap-2">
-        <div className="flex items-center gap-4">
-          <span>&copy; 2026 AEGIS-INTELLIGENCE &bull; THREAT RECONNAISSANCE SYSTEMS</span>
-          <span>&bull;</span>
-          <span className="text-emerald-400 flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            SOC LEVEL 4
-          </span>
-        </div>
-        <div className="flex items-center gap-3">
-          <span className="text-emerald-500/80">POWERED BY FASTAPI &bull; REACT &bull; SENTENCE-TRANSFORMERS</span>
-        </div>
+      {/* Bottom Subtle Terminal Output to fill empty space */}
+      <footer className="relative z-20 pb-12 px-6 md:px-12 flex flex-col items-center justify-center text-xs font-mono text-emerald-700/50">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 2, repeat: Infinity, repeatType: "reverse" }}
+          className="flex flex-col items-center gap-2"
+        >
+          <Binary className="w-5 h-5 mb-1" />
+          <span>[ SYSTEM STANDBY ]</span>
+          <span>AWAITING ANALYST INITIALIZATION SEQUENCE...</span>
+        </motion.div>
       </footer>
     </div>
   );
