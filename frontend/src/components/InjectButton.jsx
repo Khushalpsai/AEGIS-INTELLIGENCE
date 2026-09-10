@@ -50,9 +50,9 @@ export default function InjectButton({
         <button
           onClick={handleInjectClick}
           disabled={isInjecting || !hasStaged}
-          className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3.5 rounded-xl font-mono text-xs font-semibold tracking-wide transition-all shadow-lg ${
+          className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3.5 rounded-xl font-mono text-xs font-semibold tracking-wide transition-all ${
             hasStaged
-              ? 'bg-cyan-500 hover:bg-cyan-400 text-black shadow-cyan-500/20 active:scale-[0.98]'
+              ? 'bg-cyan-500 hover:bg-cyan-400 text-black active:scale-[0.98]'
               : 'bg-[#151622] text-gray-500 border border-[#222338] cursor-not-allowed'
           }`}
         >

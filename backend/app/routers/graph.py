@@ -126,7 +126,7 @@ def get_graph(threshold: float = Query(0.62, ge=0.0, le=1.0)):
 
 
 @router.get("/resolve/{alias_id}")
-def resolve_alias(alias_id: str, threshold: float = Query(0.62, ge=0.0, le=1.0)):
+def resolve_alias(alias_id: str, threshold: float = Query(0.62, ge=0.0, le=1.0), compare_all: bool = False):
     """
     Resolve which cluster an alias resolves into + confidence + evidence per connected alias.
     """
@@ -134,9 +134,12 @@ def resolve_alias(alias_id: str, threshold: float = Query(0.62, ge=0.0, le=1.0))
     if alias_id not in state.aliases_dict:
         raise HTTPException(status_code=404, detail=f"Alias '{alias_id}' not found")
 
-    active_aids = sorted(list(state.active_alias_ids))
-    if alias_id not in active_aids:
-        active_aids.append(alias_id)
+    if compare_all:
+        active_aids = list(state.aliases_dict.keys())
+    else:
+        active_aids = sorted(list(state.active_alias_ids))
+        if alias_id not in active_aids:
+            active_aids.append(alias_id)
 
     cluster_map, clusters = compute_connected_components(
         active_aids, state.matrix, state.alias_id_to_idx, threshold
@@ -156,11 +159,23 @@ def resolve_alias(alias_id: str, threshold: float = Query(0.62, ge=0.0, le=1.0))
         key = f"{alias_id}-{other_aid}"
         ev = state.evidence_dict.get(key, state.evidence_dict.get(f"{other_aid}-{alias_id}", {}))
         
+        conf_pct = round(score * 100)
+        if conf_pct < 40:
+            confidence_label = "Weak"
+        elif conf_pct < 65:
+            confidence_label = "Possible"
+        elif conf_pct < 80:
+            confidence_label = "Probable"
+        else:
+            confidence_label = "High-confidence linkage"
+            
         matches.append({
             "target_alias_id": other_aid,
             "target_username": state.aliases_dict[other_aid]["username"],
             "target_platform": state.aliases_dict[other_aid]["platform"],
             "score": round(score, 4),
+            "confidence_pct": conf_pct,
+            "confidence_label": confidence_label,
             "is_above_threshold": score >= threshold,
             "evidence": ev
         })

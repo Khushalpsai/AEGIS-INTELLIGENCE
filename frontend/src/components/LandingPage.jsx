@@ -46,7 +46,7 @@ export default function LandingPage({ onEnterDashboard }) {
       {/* Top Cyber Navigation Bar */}
       <header className="relative z-20 h-16 border-b border-emerald-900/40 bg-[#040905]/80 backdrop-blur-md px-6 md:px-12 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-emerald-950/80 border border-emerald-500/50 flex items-center justify-center text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.3)]">
+          <div className="w-9 h-9 rounded-lg bg-emerald-950/80 border border-emerald-500/50 flex items-center justify-center text-emerald-400">
             <Crosshair className="w-5 h-5 text-emerald-400 animate-pulse" />
           </div>
           <div>
@@ -73,7 +73,7 @@ export default function LandingPage({ onEnterDashboard }) {
 
           <button
             onClick={onEnterDashboard}
-            className="flex items-center gap-2 px-5 py-2 bg-emerald-500 hover:bg-emerald-400 text-black font-mono text-xs font-bold rounded-lg transition-all shadow-[0_0_20px_rgba(16,185,129,0.4)] hover:shadow-[0_0_25px_rgba(16,185,129,0.6)] active:scale-[0.98] cursor-pointer"
+            className="flex items-center gap-2 px-5 py-2 bg-emerald-500 hover:bg-emerald-400 text-black font-mono text-xs font-bold rounded-lg transition-all active:scale-[0.98] cursor-pointer"
           >
             <span>LAUNCH PLATFORM</span>
             <ArrowRight className="w-3.5 h-3.5" />
@@ -88,7 +88,7 @@ export default function LandingPage({ onEnterDashboard }) {
           initial={{ opacity: 0, y: -15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="inline-flex items-center gap-3 px-6 py-2.5 rounded-full bg-[#04160d]/90 border-2 border-emerald-400 text-emerald-300 text-xs sm:text-sm font-mono font-bold mb-8 shadow-[0_0_30px_rgba(16,185,129,0.45)] backdrop-blur-xl hover:shadow-[0_0_40px_rgba(16,185,129,0.65)] hover:border-emerald-300 transition-all duration-300 select-none"
+          className="inline-flex items-center gap-3 px-6 py-2.5 rounded-full bg-[#04160d]/90 border-2 border-emerald-400 text-emerald-300 text-xs sm:text-sm font-mono font-bold mb-8 backdrop-blur-xl hover:border-emerald-300 transition-all duration-300 select-none"
         >
           <Fingerprint className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400 flex-shrink-0 animate-pulse" />
           <span className="tracking-wide">
@@ -104,7 +104,7 @@ export default function LandingPage({ onEnterDashboard }) {
           className="mb-4"
         >
           <h1 className="text-4xl sm:text-6xl md:text-7xl font-extrabold tracking-tight text-white font-mono leading-none">
-            <span className="bg-gradient-to-r from-emerald-400 via-green-300 to-teal-400 bg-clip-text text-transparent drop-shadow-[0_0_35px_rgba(16,185,129,0.6)]">
+            <span className="bg-gradient-to-r from-emerald-400 via-green-300 to-teal-400 bg-clip-text text-transparent">
               AEGIS-INTELLIGENCE
             </span>
           </h1>
@@ -132,7 +132,7 @@ export default function LandingPage({ onEnterDashboard }) {
         >
           <button
             onClick={onEnterDashboard}
-            className="group relative px-9 py-4 bg-emerald-500 hover:bg-emerald-400 text-black font-mono font-bold text-sm tracking-wider rounded-xl transition-all duration-300 shadow-[0_0_30px_rgba(16,185,129,0.5)] hover:shadow-[0_0_40px_rgba(16,185,129,0.7)] active:scale-95 flex items-center gap-3 cursor-pointer overflow-hidden"
+            className="group relative px-9 py-4 bg-emerald-500 hover:bg-emerald-400 text-black font-mono font-bold text-sm tracking-wider rounded-xl transition-all duration-300 active:scale-95 flex items-center gap-3 cursor-pointer overflow-hidden"
           >
             {/* Shimmer sweep effect */}
             <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full duration-1000 bg-gradient-to-r from-transparent via-white/50 to-transparent transition-transform" />
@@ -150,7 +150,7 @@ export default function LandingPage({ onEnterDashboard }) {
           className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full text-left"
         >
           {/* Card 1 */}
-          <div className="bg-[#050e07]/85 backdrop-blur-md border border-emerald-800/40 hover:border-emerald-500/60 p-5 rounded-xl transition-all duration-300 space-y-2 group shadow-lg hover:shadow-[0_0_20px_rgba(16,185,129,0.15)]">
+          <div className="bg-[#050e07]/85 backdrop-blur-md border border-emerald-800/40 hover:border-emerald-500/60 p-5 rounded-xl transition-all duration-300 space-y-2 group">
             <div className="w-8 h-8 rounded-lg bg-emerald-950/80 border border-emerald-500/40 flex items-center justify-center text-emerald-400 mb-3 group-hover:scale-110 transition-transform">
               <Fingerprint className="w-4 h-4" />
             </div>
@@ -163,7 +163,7 @@ export default function LandingPage({ onEnterDashboard }) {
           </div>
 
           {/* Card 2 */}
-          <div className="bg-[#050e07]/85 backdrop-blur-md border border-emerald-800/40 hover:border-emerald-500/60 p-5 rounded-xl transition-all duration-300 space-y-2 group shadow-lg hover:shadow-[0_0_20px_rgba(16,185,129,0.15)]">
+          <div className="bg-[#050e07]/85 backdrop-blur-md border border-emerald-800/40 hover:border-emerald-500/60 p-5 rounded-xl transition-all duration-300 space-y-2 group">
             <div className="w-8 h-8 rounded-lg bg-emerald-950/80 border border-emerald-500/40 flex items-center justify-center text-emerald-400 mb-3 group-hover:scale-110 transition-transform">
               <Network className="w-4 h-4" />
             </div>
@@ -171,12 +171,12 @@ export default function LandingPage({ onEnterDashboard }) {
               Force-Directed Topology
             </h3>
             <p className="text-xs text-gray-400 leading-relaxed">
-              Interactive 2D graph with dynamic confidence threshold filtering, collision avoidance, and glowing cluster intelligence cards.
+              Interactive 2D graph with dynamic confidence threshold filtering, collision avoidance, and intelligence cards.
             </p>
           </div>
 
           {/* Card 3 */}
-          <div className="bg-[#050e07]/85 backdrop-blur-md border border-emerald-800/40 hover:border-emerald-500/60 p-5 rounded-xl transition-all duration-300 space-y-2 group shadow-lg hover:shadow-[0_0_20px_rgba(16,185,129,0.15)]">
+          <div className="bg-[#050e07]/85 backdrop-blur-md border border-emerald-800/40 hover:border-emerald-500/60 p-5 rounded-xl transition-all duration-300 space-y-2 group">
             <div className="w-8 h-8 rounded-lg bg-emerald-950/80 border border-emerald-500/40 flex items-center justify-center text-emerald-400 mb-3 group-hover:scale-110 transition-transform">
               <Zap className="w-4 h-4" />
             </div>
