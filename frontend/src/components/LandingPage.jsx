@@ -1,135 +1,178 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  ShieldAlert, 
-  Terminal, 
-  Cpu, 
-  Fingerprint, 
-  Activity, 
-  ArrowRight, 
-  Database, 
-  Network, 
-  Lock, 
-  Sparkles,
-  Zap,
-  Globe,
-  Binary,
-  Radio,
-  Eye,
-  Crosshair
-} from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 
+// ── Matrix rain canvas ───────────────────────────────
+function MatrixRain() {
+  const canvasRef = useRef(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+
+    const CHARS =
+      'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789ABCDEF';
+    const FONT_SIZE = 13;
+    let cols, drops;
+
+    const init = () => {
+      canvas.width  = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
+      cols  = Math.floor(canvas.width / FONT_SIZE);
+      drops = Array.from({ length: cols }, () => Math.random() * -80);
+    };
+    init();
+
+    const draw = () => {
+      ctx.fillStyle = 'rgba(9, 8, 10, 0.15)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.font = `${FONT_SIZE}px 'JetBrains Mono', monospace`;
+
+      for (let i = 0; i < drops.length; i++) {
+        const char = CHARS[Math.floor(Math.random() * CHARS.length)];
+        const y = drops[i] * FONT_SIZE;
+        // Head character — bright
+        ctx.fillStyle = 'rgba(253, 230, 138, 0.9)';
+        ctx.fillText(char, i * FONT_SIZE, y);
+        // Trail — dim amber
+        ctx.fillStyle = `rgba(180, 83, 9, ${0.15 + Math.random() * 0.3})`;
+        ctx.fillText(CHARS[Math.floor(Math.random() * CHARS.length)], i * FONT_SIZE, y - FONT_SIZE * 2);
+
+        if (y > canvas.height && Math.random() > 0.975) drops[i] = 0;
+        drops[i] += 0.45;
+      }
+    };
+
+    const interval = setInterval(draw, 50);
+    const onResize = () => init();
+    window.addEventListener('resize', onResize);
+    return () => { clearInterval(interval); window.removeEventListener('resize', onResize); };
+  }, []);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      className="absolute inset-0 w-full h-full pointer-events-none"
+      style={{ opacity: 0.35 }}
+    />
+  );
+}
+
+// ── Landing page ─────────────────────────────────────
 export default function LandingPage({ onEnterDashboard }) {
   return (
-    <div className="relative min-h-screen w-full bg-[#030704] text-gray-100 overflow-x-hidden font-sans select-none flex flex-col justify-between">
-      {/* Fullscreen Matrix Skull Background with Cyber Vignette */}
-      <div 
-        className="absolute inset-0 bg-center bg-no-repeat bg-cover pointer-events-none opacity-65 filter contrast-125 brightness-105 saturate-125"
-        style={{
-          backgroundImage: `url('/matrix-skull.png')`,
-        }}
+    <div className="relative min-h-screen w-full bg-[#09080a] text-[#eae6f0] overflow-hidden flex flex-col select-none">
+
+      <MatrixRain />
+
+      {/* Deep vignette so center content pops */}
+      <div className="absolute inset-0 pointer-events-none z-[1]"
+        style={{ background: 'radial-gradient(ellipse 80% 80% at 50% 50%, transparent 20%, rgba(9,8,10,0.75) 100%)' }}
       />
 
-      {/* Matrix Green Scanlines & Radial Gradients */}
-      <div className="absolute inset-0 bg-gradient-to-b from-[#030704]/70 via-[#030704]/35 to-[#030704]/85 pointer-events-none" />
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(3,7,4,0.75)_100%)] pointer-events-none" />
-      
-      {/* Matrix Grid Lines */}
-      <div 
-        className="absolute inset-0 pointer-events-none opacity-[0.05]"
-        style={{
-          backgroundImage: `linear-gradient(to right, #22c55e 1px, transparent 1px), linear-gradient(to bottom, #22c55e 1px, transparent 1px)`,
-          backgroundSize: '40px 40px'
-        }}
-      />
-
-      {/* Top Cyber Navigation Bar */}
-      <header className="relative z-20 h-16 border-b border-emerald-900/40 bg-[#040905]/80 backdrop-blur-md px-6 md:px-12 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="font-mono text-emerald-400 font-bold tracking-widest text-sm flex items-center gap-2 bg-emerald-950/40 px-4 py-2 rounded-lg border border-emerald-900/50">
-             <Terminal className="w-4 h-4" />
-             Team name: LeaveLeave
-          </div>
+      {/* ── Nav ──────────────────────────────────────── */}
+      <header className="relative z-20 flex items-center justify-between px-8 py-5">
+        {/* Left: wordmark */}
+        <div className="flex items-center gap-2.5">
+          <span className="font-mono text-[11px] font-bold text-amber-400 tracking-[0.18em] uppercase">
+            Aegis-Intelligence
+          </span>
+          <span className="font-mono text-[9px] text-[#3d3850] border border-[#2a2535] px-1.5 py-0.5 rounded">
+            v1.0
+          </span>
         </div>
 
-        <div className="flex items-center gap-4">
-          {/* Radar Live Feed removed as requested */}
-
+        {/* Right: team + cta */}
+        <div className="flex items-center gap-5">
+          <span className="hidden sm:block font-mono text-[11px] text-[#5a5568]">
+            Team: LeaveLeave
+          </span>
           <button
             onClick={onEnterDashboard}
-            className="flex items-center gap-2 px-5 py-2 bg-emerald-500 hover:bg-emerald-400 text-black font-mono text-xs font-bold rounded-lg transition-all active:scale-[0.98] cursor-pointer"
+            className="flex items-center gap-2 px-4 py-2 border border-amber-500/60 hover:border-amber-400 hover:bg-amber-500/8 text-amber-400 hover:text-amber-300 font-mono text-[11px] font-semibold rounded transition-all duration-150"
           >
-            <span>LAUNCH PLATFORM</span>
-            <ArrowRight className="w-3.5 h-3.5" />
+            Launch <ArrowRight className="w-3 h-3" />
           </button>
         </div>
       </header>
 
-      {/* Main Hero Content */}
-      <main className="relative z-10 flex-1 max-w-7xl mx-auto px-6 md:px-12 py-12 md:py-16 flex flex-col items-center justify-center text-center">
-        {/* Centered Heading Element removed as requested */}
+      {/* ── Hero ─────────────────────────────────────── */}
+      <main className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 text-center">
 
-        {/* Brand Name Headline */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.6, delay: 0.1 }}
-          className="mb-4"
-        >
-          <h1 className="text-4xl sm:text-6xl md:text-7xl font-extrabold tracking-tight text-white font-mono leading-none">
-            <span className="bg-gradient-to-r from-emerald-400 via-green-300 to-teal-400 bg-clip-text text-transparent">
-              AEGIS-INTELLIGENCE
-            </span>
-          </h1>
-          <p className="text-sm sm:text-base font-mono text-emerald-400/90 font-semibold tracking-widest mt-2 uppercase">
-            Dark-Web Threat Actor Identity Resolution Platform
-          </p>
-        </motion.div>
-
-        {/* Lead Narrative */}
+        {/* Overline */}
         <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          className="text-sm sm:text-base text-gray-300 max-w-2xl font-normal leading-relaxed mb-8 backdrop-blur-sm bg-black/40 p-4 rounded-xl border border-emerald-900/40 shadow-xl"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.6 }}
+          className="font-mono text-[10px] tracking-[0.3em] text-amber-600 uppercase mb-7"
         >
-          Autonomous stylometric vector correlation and multi-alias threat actor de-anonymization. Ingests unindexed posts across subterranean markets, computing linguistic cadence, shared n-grams, and interactive cluster graphs.
+          Dark-Web Threat Intelligence
         </motion.p>
 
-        {/* Call to Action Button */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
+        {/* Main title */}
+        <motion.h1
+          initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.3 }}
-          className="flex flex-col sm:flex-row items-center gap-4 mb-14"
+          transition={{ duration: 0.55, delay: 0.1 }}
+          className="font-mono font-black tracking-tighter leading-[0.92] mb-6"
+          style={{ fontSize: 'clamp(3.5rem, 10vw, 7.5rem)' }}
+        >
+          <span className="text-[#eae6f0]">AEGIS</span>
+          <span className="text-amber-500">.</span>
+          <br className="sm:hidden" />
+          <span className="text-[#eae6f0]">INTELLIGENCE</span>
+        </motion.h1>
+
+        {/* Descriptor */}
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.25 }}
+          className="text-[#5a5568] text-sm font-mono tracking-widest uppercase mb-12 max-w-sm leading-relaxed"
+        >
+          Stylometric alias correlation &amp; identity resolution
+        </motion.p>
+
+        {/* CTA */}
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.35 }}
         >
           <button
             onClick={onEnterDashboard}
-            className="group relative px-9 py-4 bg-emerald-500 hover:bg-emerald-400 text-black font-mono font-bold text-sm tracking-wider rounded-xl transition-all duration-300 active:scale-95 flex items-center gap-3 cursor-pointer overflow-hidden"
+            className="group relative font-mono font-black tracking-tight leading-none text-amber-400 hover:text-amber-300 transition-colors duration-150 cursor-pointer"
+            style={{ fontSize: 'clamp(3rem, 8vw, 6.5rem)' }}
           >
-            {/* Shimmer sweep effect */}
-            <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full duration-1000 bg-gradient-to-r from-transparent via-white/50 to-transparent transition-transform" />
-            <Terminal className="w-4 h-4 text-black" />
-            <span>ENTER AEGIS RESOLUTION MATRIX</span>
-            <ArrowRight className="w-4 h-4 group-hover:translate-x-1.5 transition-transform" />
+            {/* Subtle amber glow behind the text */}
+            <span
+              className="absolute inset-0 blur-2xl opacity-0 group-hover:opacity-20 transition-opacity duration-300 pointer-events-none"
+              style={{ background: '#f59e0b' }}
+            />
+            <span className="relative">
+              &gt;_
+            </span>
           </button>
+          <p className="mt-3 font-mono text-[10px] tracking-[0.25em] text-[#3d3850] uppercase text-center">
+            click to enter
+          </p>
         </motion.div>
 
-        {/* 3 Green Matrix Feature Pillar Cards removed as requested */}
       </main>
 
-      {/* Bottom Subtle Terminal Output to fill empty space */}
-      <footer className="relative z-20 pb-12 px-6 md:px-12 flex flex-col items-center justify-center text-xs font-mono text-emerald-700/50">
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 2, repeat: Infinity, repeatType: "reverse" }}
-          className="flex flex-col items-center gap-2"
+      {/* ── Footer ───────────────────────────────────── */}
+      <footer className="relative z-20 flex items-center justify-between px-8 py-4 border-t border-[#1a1720]">
+        <span className="font-mono text-[9px] text-[#3d3850] tracking-widest uppercase">
+          Aegis-Intelligence // OSINT Platform
+        </span>
+        <motion.span
+          animate={{ opacity: [0.4, 1, 0.4] }}
+          transition={{ duration: 2.5, repeat: Infinity }}
+          className="font-mono text-[9px] text-amber-700 tracking-widest"
         >
-          <Binary className="w-5 h-5 mb-1" />
-          <span>[ SYSTEM STANDBY ]</span>
-          <span>AWAITING ANALYST INITIALIZATION SEQUENCE...</span>
-        </motion.div>
+          ● SYSTEM STANDBY
+        </motion.span>
       </footer>
     </div>
   );

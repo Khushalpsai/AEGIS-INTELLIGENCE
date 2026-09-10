@@ -1,94 +1,103 @@
 import React, { useState } from 'react';
-import { PlusCircle, RotateCcw, Zap, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Zap, RotateCcw, CheckCircle2, AlertCircle, AlertTriangle } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
-export default function InjectButton({
-  stagedAliases = [],
-  isInjecting = false,
-  onInject,
-  onReset
-}) {
+export default function InjectButton({ stagedAliases = [], isInjecting = false, onInject, onReset }) {
   const [notification, setNotification] = useState(null);
 
-  const handleInjectClick = async () => {
+  const push = (type, text) => {
+    setNotification({ type, text });
+    setTimeout(() => setNotification(null), type === 'success' ? 4000 : 3000);
+  };
+
+  const handleInject = async () => {
     if (stagedAliases.length === 0) {
-      setNotification({ type: 'warning', text: 'All staged aliases already injected.' });
-      setTimeout(() => setNotification(null), 3000);
+      push('warning', 'All staged aliases already injected.');
       return;
     }
-
     try {
       const res = await onInject();
       if (res?.injected_alias_id) {
-        setNotification({
-          type: 'success',
-          text: `Injected ${res.injected_alias_id} -> ${res.resolved_edges?.length || 0} edge(s) resolved!`
-        });
-        setTimeout(() => setNotification(null), 4000);
+        push('success', `Injected ${res.injected_alias_id} — ${res.resolved_edges?.length ?? 0} edge(s) resolved`);
       }
     } catch (err) {
-      setNotification({ type: 'error', text: err.message || 'Injection failed' });
-      setTimeout(() => setNotification(null), 3000);
+      push('error', err.message || 'Injection failed');
     }
   };
 
-  const handleResetClick = async () => {
+  const handleReset = async () => {
     try {
       await onReset();
-      setNotification({ type: 'success', text: 'Demo environment reset to initial state.' });
-      setTimeout(() => setNotification(null), 3000);
-    } catch (err) {
-      setNotification({ type: 'error', text: 'Reset failed' });
-      setTimeout(() => setNotification(null), 3000);
+      push('success', 'Environment reset to initial state.');
+    } catch {
+      push('error', 'Reset failed.');
     }
   };
 
   const hasStaged = stagedAliases.length > 0;
 
+  const NOTIF_STYLES = {
+    success: {
+      wrap: 'bg-emerald-950/50 border-emerald-500/30 text-emerald-300',
+      icon: <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />,
+    },
+    warning: {
+      wrap: 'bg-amber-950/50 border-amber-500/30 text-amber-300',
+      icon: <AlertTriangle className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />,
+    },
+    error: {
+      wrap: 'bg-rose-950/50 border-rose-500/30 text-rose-300',
+      icon: <AlertCircle className="w-3.5 h-3.5 text-rose-400 flex-shrink-0" />,
+    },
+  };
+
   return (
     <div className="space-y-2">
-      <div className="flex items-center gap-2">
+      <div className="flex gap-2">
+        {/* Inject button */}
         <button
-          onClick={handleInjectClick}
+          onClick={handleInject}
           disabled={isInjecting || !hasStaged}
-          className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3.5 rounded-xl font-mono text-xs font-semibold tracking-wide transition-all ${
+          className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg font-mono text-xs font-bold transition-all ${
             hasStaged
-              ? 'bg-cyan-500 hover:bg-cyan-400 text-black active:scale-[0.98]'
-              : 'bg-[#151622] text-gray-500 border border-[#222338] cursor-not-allowed'
+              ? 'bg-amber-500 hover:bg-amber-400 text-black active:scale-[0.97]'
+              : 'bg-[#1a1720] border border-[#2a2535] text-[#5a5568] cursor-not-allowed'
           }`}
         >
           <Zap className={`w-3.5 h-3.5 ${hasStaged ? 'fill-current' : ''}`} />
-          <span>Inject Staged Alias</span>
-          <span className={`px-1.5 py-0.2 rounded text-[10px] font-bold ${
-            hasStaged ? 'bg-black/20 text-black' : 'bg-[#1c1d2e] text-gray-500'
+          {isInjecting ? 'Injecting...' : 'Inject Staged Alias'}
+          <span className={`px-1.5 rounded text-[10px] font-bold ${
+            hasStaged ? 'bg-black/20 text-black' : 'text-[#5a5568]'
           }`}>
             {stagedAliases.length}
           </span>
         </button>
 
+        {/* Reset button */}
         <button
-          onClick={handleResetClick}
-          title="Reset Staged Aliases"
-          className="p-2.5 bg-[#101018] hover:bg-[#181826] border border-[#1e1e2f] hover:border-[#2f2f48] text-gray-400 hover:text-white rounded-xl transition-colors shadow-sm"
+          onClick={handleReset}
+          title="Reset demo state"
+          className="p-2 bg-[#141218] hover:bg-[#1a1720] border border-[#2a2535] hover:border-[#3d3850] text-[#9d98aa] hover:text-[#eae6f0] rounded-lg transition-colors"
         >
           <RotateCcw className="w-3.5 h-3.5" />
         </button>
       </div>
 
-      {/* Real-time Notification Banner */}
-      {notification && (
-        <div className={`p-2 rounded-lg text-xs font-mono flex items-center gap-2 animate-in fade-in slide-in-from-top-1 ${
-          notification.type === 'success'
-            ? 'bg-cyan-950/60 border border-cyan-500/40 text-cyan-300'
-            : notification.type === 'warning'
-            ? 'bg-amber-950/60 border border-amber-500/40 text-amber-300'
-            : 'bg-rose-950/60 border border-rose-500/40 text-rose-300'
-        }`}>
-          {notification.type === 'success' && <CheckCircle2 className="w-3.5 h-3.5 text-cyan-400" />}
-          {notification.type === 'warning' && <AlertCircle className="w-3.5 h-3.5 text-amber-400" />}
-          {notification.type === 'error' && <AlertCircle className="w-3.5 h-3.5 text-rose-400" />}
-          <span>{notification.text}</span>
-        </div>
-      )}
+      {/* Notification */}
+      <AnimatePresence>
+        {notification && (
+          <motion.div
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            transition={{ duration: 0.15 }}
+            className={`flex items-center gap-2 px-2.5 py-2 rounded-lg border text-[11px] font-mono ${NOTIF_STYLES[notification.type].wrap}`}
+          >
+            {NOTIF_STYLES[notification.type].icon}
+            <span>{notification.text}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
