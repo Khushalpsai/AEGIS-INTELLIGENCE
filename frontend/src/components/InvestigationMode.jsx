@@ -184,19 +184,24 @@ export default function InvestigationMode({ allNodes, onExit }) {
     setStep(5);
   };
 
-  const handleExportPDF = () => {
+  const handleExportPDF = async () => {
     const element = document.getElementById('report-content');
     if (!element) return;
-    
+
     const opt = {
-      margin:       0.5,
-      filename:     `AEGIS-Report-${selectedAliasId}.pdf`,
-      image:        { type: 'jpeg', quality: 0.98 },
-      html2canvas:  { scale: 2, useCORS: true, backgroundColor: '#0e0c0f' },
-      jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+      margin:      0.5,
+      filename:    `AEGIS-Report-${selectedAliasId}.pdf`,
+      image:       { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true, backgroundColor: '#0e0c0f', scrollY: 0 },
+      jsPDF:       { unit: 'in', format: 'letter', orientation: 'portrait' },
     };
-    
-    html2pdf().set(opt).from(element).save();
+
+    try {
+      await html2pdf().set(opt).from(element).save();
+      setReportGenerated(false);
+    } catch (err) {
+      console.error('PDF export error:', err);
+    }
   };
 
   const filteredNodes = allNodes.filter(
