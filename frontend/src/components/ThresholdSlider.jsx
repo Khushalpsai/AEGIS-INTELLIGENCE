@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 
 const PRESETS = [
   { val: 0.50, label: 'Loose'   },
-  { val: 0.62, label: 'Optimal' },
-  { val: 0.75, label: 'Strict'  },
+  { val: 0.55, label: 'Optimal' },
+  { val: 0.70, label: 'Strict'  },
   { val: 0.85, label: 'High'    },
 ];
 

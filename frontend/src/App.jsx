@@ -31,7 +31,7 @@ export default function App() {
   const [currentView, setCurrentView] = useState('landing');
 
   // Graph state
-  const [threshold, setThreshold] = useState(0.62);
+  const [threshold, setThreshold] = useState(0.55);
   const [graphData, setGraphData] = useState({ nodes: [], edges: [], clusters: [], staged_aliases: [] });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
