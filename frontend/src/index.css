@@ -3,121 +3,72 @@
 
 @layer base {
   :root {
-    /* Base surfaces */
-    --bg-void:    #09080a;
-    --bg-main:    #0e0c0f;
-    --bg-surface: #141218;
-    --bg-card:    #1a1720;
-    --bg-raised:  #201d28;
+    /* Surfaces */
+    --c-bg:       #0a0b0d;
+    --c-bg-1:     #0e1012;
+    --c-bg-2:     #12151a;
+    --c-bg-3:     #181c22;
 
-    /* Primary accent — amber */
-    --accent:         #f59e0b;
-    --accent-rgb:     245, 158, 11;
-    --accent-dim:     #b45309;
-    --accent-muted:   rgba(245, 158, 11, 0.12);
-    --accent-glow:    rgba(245, 158, 11, 0.25);
+    /* Primary signal — cold blue-green */
+    --c-green:    #00d4aa;
+    --c-green-dim: rgba(0, 212, 170, 0.15);
+    --c-green-border: rgba(0, 212, 170, 0.25);
 
-    /* Alert — rose/red */
-    --alert:          #f43f5e;
-    --alert-rgb:      244, 63, 94;
-    --alert-muted:    rgba(244, 63, 94, 0.12);
-
-    /* Positive — emerald */
-    --positive:       #10b981;
-    --positive-muted: rgba(16, 185, 129, 0.12);
-
-    /* Borders */
-    --border:         #2a2535;
-    --border-hover:   #3d3850;
-    --border-accent:  rgba(245, 158, 11, 0.35);
+    /* Secondary */
+    --c-blue:     #38bdf8;
+    --c-red:      #f43f5e;
+    --c-yellow:   #fbbf24;
+    --c-violet:   #a78bfa;
 
     /* Text */
-    --text-main:      #eae6f0;
-    --text-sub:       #9d98aa;
-    --text-dim:       #5a5568;
+    --c-text:     #cdd6e0;
+    --c-text-dim: #5a6a7a;
+    --c-text-sub: #8899aa;
+
+    /* Borders */
+    --c-border:   #1e252e;
+    --c-border-2: #2a3340;
   }
+
+  * { box-sizing: border-box; }
 
   body {
-    background-color: var(--bg-void);
-    color: var(--text-main);
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    overflow-x: hidden;
+    background: var(--c-bg);
+    color: var(--c-text);
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 13px;
+    line-height: 1.5;
     margin: 0;
     padding: 0;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
   }
 
-  code, kbd, samp, pre, .font-mono {
-    font-family: 'JetBrains Mono', monospace;
-  }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  code, pre, kbd, .font-mono { font-family: 'JetBrains Mono', monospace; }
 }
 
-/* ── Scrollbar ─────────────────────────────────────── */
-::-webkit-scrollbar       { width: 4px; height: 4px; }
+/* ── Scrollbar ───────────────────────────────────── */
+::-webkit-scrollbar       { width: 3px; height: 3px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #2a2535; border-radius: 2px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(245,158,11,0.4); }
+::-webkit-scrollbar-thumb { background: #2a3340; }
+::-webkit-scrollbar-thumb:hover { background: rgba(0,212,170,0.4); }
 
-/* ── Glow utilities ────────────────────────────────── */
-.glow-amber {
-  box-shadow: 0 0 22px -4px rgba(245, 158, 11, 0.35);
-}
-.glow-amber-sm {
-  box-shadow: 0 0 10px -2px rgba(245, 158, 11, 0.22);
-}
-.glow-alert {
-  box-shadow: 0 0 18px -4px rgba(244, 63, 94, 0.35);
-}
+/* ── Bar fill transition ─────────────────────────── */
+.bar-fill { transition: width 0.5s cubic-bezier(.4,0,.2,1); }
 
-/* ── Scanline overlay (LandingPage) ────────────────── */
-.scanlines::after {
+/* ── Scanline overlay ────────────────────────────── */
+.scanlines::before {
   content: '';
   position: absolute;
   inset: 0;
   background: repeating-linear-gradient(
-    to bottom,
-    transparent 0px,
-    transparent 3px,
-    rgba(0, 0, 0, 0.18) 3px,
-    rgba(0, 0, 0, 0.18) 4px
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,0.08) 2px,
+    rgba(0,0,0,0.08) 4px
   );
   pointer-events: none;
-  z-index: 1;
-}
-
-/* ── Animated gradient text ────────────────────────── */
-.text-gradient-amber {
-  background: linear-gradient(90deg, #f59e0b, #fcd34d, #f59e0b);
-  background-size: 200% auto;
-  background-clip: text;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  animation: shimmer 4s linear infinite;
-}
-
-@keyframes shimmer {
-  from { background-position: 0% center; }
-  to   { background-position: 200% center; }
-}
-
-/* ── Blinking cursor ───────────────────────────────── */
-.cursor-blink::after {
-  content: '_';
-  animation: blink 1.1s step-end infinite;
-}
-@keyframes blink {
-  50% { opacity: 0; }
-}
-
-/* ── Panel slide-in ────────────────────────────────── */
-.panel-enter {
-  animation: slideInRight 0.22s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-}
-@keyframes slideInRight {
-  from { transform: translateX(100%); opacity: 0; }
-  to   { transform: translateX(0);    opacity: 1; }
-}
-
-/* ── Progress bar fill animation ───────────────────── */
-.bar-fill {
-  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 0;
 }
