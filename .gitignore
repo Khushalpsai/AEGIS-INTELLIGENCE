@@ -43,3 +43,6 @@ wheels/
 *.swo
 .DS_Store
 Thumbs.db
+
+# Deployment guide — contains credential setup instructions, do NOT commit
+DEPLOYMENT.md

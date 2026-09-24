@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowLeft, Search, ChevronRight, Fingerprint, ShieldAlert, FileSearch, Terminal, Clock, Download } from 'lucide-react';
 import { resolveAlias, fetchAliasDetail } from '../api/client';
-
+import { exportIntelligenceReport } from '../utils/exportPDF';
 // ── Temporal Timeline ────────────────────────────────
 function TemporalTimeline({ targetPosts, candidatePosts, targetId, candidateId }) {
   if (!targetPosts?.length || !candidatePosts?.length) return null;
@@ -120,6 +120,23 @@ export default function InvestigationMode({ allNodes, onExit }) {
       setStep(4);
     } catch (e) { console.error(e); }
     finally { setIsResolving(false); }
+  };
+
+  const handleExportPDF = () => {
+    if (!selectedCandidate || !aliasDetail) return;
+    const year = new Date().getFullYear();
+    const caseId = `AEG-${year}-${String(Math.floor(Math.random() * 9000) + 1000)}`;
+    exportIntelligenceReport({
+      caseId,
+      targetId:          selectedAliasId,
+      targetUsername:    aliasDetail.username ?? selectedAliasId,
+      targetPosts:       aliasDetail.posts ?? [],
+      candidateId:       selectedCandidate.target_alias_id,
+      candidateUsername: selectedCandidate.target_username ?? selectedCandidate.target_alias_id,
+      candidatePosts:    selectedCandidate.detail?.posts ?? [],
+      confidence:        selectedCandidate.confidence_pct,
+      evidence:          selectedCandidate.evidence ?? {},
+    });
   };
 
   const filtered = allNodes.filter(n =>
@@ -366,22 +383,42 @@ export default function InvestigationMode({ allNodes, onExit }) {
                   </div>
                 </div>
 
-                {/* Findings table */}
-                <div className="border border-[#1e252e]">
-                  <div className="font-mono text-[9px] font-bold tracking-[0.2em] text-[#5a6a7a] uppercase px-3 py-2 border-b border-[#1e252e] bg-[#12151a]">
-                    KEY FINDINGS
+                {/* Visual Evidence (Graphs & Timeline) */}
+                <div className="space-y-4">
+                  {/* Stylometric vectors */}
+                  <div>
+                    <div className="font-mono text-[9px] font-bold tracking-[0.2em] text-[#5a6a7a] uppercase mb-2">Stylometric Vectors</div>
+                    <MetricBar label="Semantic Embedding Similarity" pct={selectedCandidate.confidence_pct} color="#00d4aa" />
+                    <MetricBar label={`Syntax Match (Sentence Δ ±${selectedCandidate.evidence?.sentence_length_delta ?? 0} wds)`}
+                      pct={Math.max(10, 100 - (selectedCandidate.evidence?.sentence_length_delta ?? 0) * 10)} color="#38bdf8" />
+                    <MetricBar label="Punctuation Profile Overlap"
+                      pct={(selectedCandidate.evidence?.punctuation_similarity ?? 0) * 100} color="#a78bfa" />
                   </div>
-                  {[
-                    ['Vector Similarity',   `${selectedCandidate.confidence_pct}%`,                                                          '#00d4aa'],
-                    ['Sentence Length Δ',   `±${selectedCandidate.evidence?.sentence_length_delta ?? 0} words`,                              '#38bdf8'],
-                    ['Punctuation Overlap', `${((selectedCandidate.evidence?.punctuation_similarity ?? 0) * 100).toFixed(0)}%`,              '#a78bfa'],
-                    ['Shared N-Grams',      `${selectedCandidate.evidence?.shared_phrases?.length ?? 0} phrases`,                           '#fbbf24'],
-                  ].map(([lbl, val, col]) => (
-                    <div key={lbl} className="flex items-center justify-between px-3 py-2 border-b border-[#1e252e] last:border-0">
-                      <span className="font-mono text-[10px] text-[#5a6a7a]">{lbl}</span>
-                      <span className="font-mono text-[10px] font-bold" style={{ color: col }}>{val}</span>
-                    </div>
-                  ))}
+
+                  {/* N-Grams */}
+                  <div>
+                    <div className="font-mono text-[9px] font-bold tracking-[0.2em] text-[#5a6a7a] uppercase mb-2">Shared N-Grams</div>
+                    {selectedCandidate.evidence?.shared_phrases?.length > 0 ? (
+                      <div className="flex flex-wrap gap-1">
+                        {selectedCandidate.evidence.shared_phrases.map((p, i) => (
+                          <span key={i} className="font-mono text-[9px] text-[#5a6a7a] bg-[#0a0b0d] border border-[#1e252e] px-1.5 py-0.5">"{p}"</span>
+                        ))}
+                      </div>
+                    ) : (
+                      <span className="font-mono text-[10px] text-[#2a3340]">No significant overlap detected.</span>
+                    )}
+                  </div>
+
+                  {/* Timeline */}
+                  <div>
+                    <div className="font-mono text-[9px] font-bold tracking-[0.2em] text-[#5a6a7a] uppercase mb-2">Temporal Activity</div>
+                    <TemporalTimeline
+                      targetPosts={aliasDetail?.posts}
+                      candidatePosts={selectedCandidate.detail?.posts}
+                      targetId={selectedAliasId}
+                      candidateId={selectedCandidate.target_alias_id}
+                    />
+                  </div>
                 </div>
 
                 {/* Footer */}
@@ -389,7 +426,7 @@ export default function InvestigationMode({ allNodes, onExit }) {
                   <span className="font-mono text-[9px] text-[#2a3340] flex items-center gap-1.5">
                     <Clock className="w-3 h-3" /> {new Date().toLocaleString()}
                   </span>
-                  <button className="font-mono text-[10px] text-[#5a6a7a] hover:text-[#cdd6e0] border border-[#1e252e] hover:border-[#2a3340] px-3 py-1.5 flex items-center gap-1.5 transition-colors">
+                  <button onClick={handleExportPDF} className="font-mono text-[10px] text-[#5a6a7a] hover:text-[#cdd6e0] border border-[#1e252e] hover:border-[#2a3340] px-3 py-1.5 flex items-center gap-1.5 transition-colors">
                     <Download className="w-3 h-3" /> EXPORT PDF
                   </button>
                 </div>
