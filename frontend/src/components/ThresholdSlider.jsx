@@ -1,90 +1,55 @@
 import React, { useState, useEffect } from 'react';
 
 const PRESETS = [
-  { val: 0.50, label: 'Loose'   },
-  { val: 0.62, label: 'Optimal' },
-  { val: 0.75, label: 'Strict'  },
-  { val: 0.85, label: 'High'    },
+  { val: 0.50, label: 'LOOSE' },
+  { val: 0.55, label: 'OPT'   },
+  { val: 0.70, label: 'STRICT'},
+  { val: 0.85, label: 'HIGH'  },
 ];
 
 export default function ThresholdSlider({ threshold, onChange, totalEdges, totalClusters }) {
-  const [localVal, setLocalVal] = useState(threshold);
+  const [local, setLocal] = useState(threshold);
+  useEffect(() => setLocal(threshold), [threshold]);
 
-  useEffect(() => { setLocalVal(threshold); }, [threshold]);
-
-  const handleChange = (e) => {
-    const val = parseFloat(e.target.value);
-    setLocalVal(val);
-    onChange(val);
-  };
-
-  const setPreset = (val) => {
-    setLocalVal(val);
-    onChange(val);
-  };
-
-  // Map 0.30–0.95 to a fill percentage for the track
-  const pct = ((localVal - 0.30) / (0.95 - 0.30)) * 100;
+  const pct = ((local - 0.30) / (0.95 - 0.30)) * 100;
 
   return (
-    <div className="space-y-3">
-      {/* Value readout */}
+    <div className="space-y-2.5">
+      {/* Value */}
       <div className="flex items-center justify-between">
-        <span className="font-mono text-[11px] text-[#5a5568] uppercase tracking-widest">
-          SIM ≥
-        </span>
-        <span className="font-mono text-lg font-bold text-amber-400 tabular-nums leading-none">
-          {localVal.toFixed(2)}
-        </span>
+        <span className="font-mono text-[10px] text-[#5a6a7a]">SIM ≥</span>
+        <span className="font-mono text-base font-bold text-[#00d4aa] tabular-nums">{local.toFixed(2)}</span>
       </div>
 
-      {/* Slider track */}
-      <div className="relative h-6 flex items-center">
-        {/* Filled track */}
-        <div className="absolute left-0 top-1/2 -translate-y-1/2 h-1 rounded-full bg-[#2a2535] w-full" />
-        <div
-          className="absolute left-0 top-1/2 -translate-y-1/2 h-1 rounded-full bg-amber-500 transition-all duration-75 pointer-events-none"
-          style={{ width: `${pct}%` }}
-        />
+      {/* Track */}
+      <div className="relative h-5 flex items-center">
+        <div className="absolute w-full h-px bg-[#1e252e]" />
+        <div className="absolute h-px bg-[#00d4aa] transition-all duration-75 pointer-events-none" style={{ width: `${pct}%` }} />
         <input
-          type="range"
-          min="0.30"
-          max="0.95"
-          step="0.01"
-          value={localVal}
-          onChange={handleChange}
+          type="range" min="0.30" max="0.95" step="0.01" value={local}
+          onChange={e => { const v = parseFloat(e.target.value); setLocal(v); onChange(v); }}
           className="relative w-full appearance-none bg-transparent cursor-pointer
             [&::-webkit-slider-thumb]:appearance-none
-            [&::-webkit-slider-thumb]:w-4
-            [&::-webkit-slider-thumb]:h-4
-            [&::-webkit-slider-thumb]:rounded-full
-            [&::-webkit-slider-thumb]:bg-amber-400
-            [&::-webkit-slider-thumb]:border-2
-            [&::-webkit-slider-thumb]:border-[#0e0c0f]
-            [&::-webkit-slider-thumb]:shadow-[0_0_8px_rgba(245,158,11,0.5)]
-            [&::-webkit-slider-thumb]:cursor-pointer
-            [&::-moz-range-thumb]:w-4
-            [&::-moz-range-thumb]:h-4
-            [&::-moz-range-thumb]:rounded-full
-            [&::-moz-range-thumb]:bg-amber-400
-            [&::-moz-range-thumb]:border-2
-            [&::-moz-range-thumb]:border-[#0e0c0f]
+            [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3
+            [&::-webkit-slider-thumb]:bg-[#00d4aa] [&::-webkit-slider-thumb]:cursor-pointer
+            [&::-moz-range-thumb]:w-3 [&::-moz-range-thumb]:h-3
+            [&::-moz-range-thumb]:bg-[#00d4aa] [&::-moz-range-thumb]:border-0
             [&::-moz-range-thumb]:cursor-pointer"
         />
       </div>
 
-      {/* Preset buttons */}
+      {/* Presets */}
       <div className="grid grid-cols-4 gap-1">
         {PRESETS.map(({ val, label }) => {
-          const active = Math.abs(localVal - val) < 0.015;
+          const active = Math.abs(local - val) < 0.015;
           return (
             <button
               key={val}
-              onClick={() => setPreset(val)}
-              className={`py-1 rounded text-[10px] font-mono font-semibold transition-all border ${
+              onClick={() => { setLocal(val); onChange(val); }}
+              className={`font-mono text-[9px] py-1 transition-all border ${
                 active
-                  ? 'bg-amber-500/15 border-amber-500/50 text-amber-400'
-                  : 'bg-[#141218] border-[#2a2535] text-[#5a5568] hover:border-[#3d3850] hover:text-[#9d98aa]'
+                  ? 'border-[#00d4aa]/60 text-[#00d4aa] bg-[#00d4aa]/8'
+                  : 'border-[#1e252e] text-[#5a6a7a] hover:border-[#2a3340] hover:text-[#8899aa]'
               }`}
             >
               {label}
@@ -93,15 +58,15 @@ export default function ThresholdSlider({ threshold, onChange, totalEdges, total
         })}
       </div>
 
-      {/* Live readout */}
-      <div className="grid grid-cols-2 gap-2 pt-1 border-t border-[#2a2535]">
-        <div className="flex flex-col gap-0.5 bg-[#141218] border border-[#2a2535] rounded-lg px-2.5 py-1.5">
-          <span className="font-mono text-[10px] text-[#5a5568]">Edges</span>
-          <span className="font-mono font-bold text-amber-400 text-sm tabular-nums">{totalEdges}</span>
+      {/* Stats */}
+      <div className="grid grid-cols-2 gap-2 pt-1 border-t border-[#1e252e]">
+        <div>
+          <div className="font-mono text-[9px] text-[#5a6a7a]">EDGES</div>
+          <div className="font-mono text-sm font-bold text-[#cdd6e0] tabular-nums">{totalEdges}</div>
         </div>
-        <div className="flex flex-col gap-0.5 bg-[#141218] border border-[#2a2535] rounded-lg px-2.5 py-1.5">
-          <span className="font-mono text-[10px] text-[#5a5568]">Clusters</span>
-          <span className="font-mono font-bold text-violet-400 text-sm tabular-nums">{totalClusters}</span>
+        <div>
+          <div className="font-mono text-[9px] text-[#5a6a7a]">CLUSTERS</div>
+          <div className="font-mono text-sm font-bold text-[#cdd6e0] tabular-nums">{totalClusters}</div>
         </div>
       </div>
     </div>

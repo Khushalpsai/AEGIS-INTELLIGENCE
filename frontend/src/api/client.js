@@ -3,7 +3,7 @@ const BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 /**
  * Fetch graph nodes and edges at specified similarity threshold.
  */
-export async function fetchGraph(threshold = 0.62) {
+export async function fetchGraph(threshold = 0.55) {
   const res = await fetch(`${BASE_URL}/graph?threshold=${threshold}`);
   if (!res.ok) {
     throw new Error(`Failed to fetch graph: ${res.statusText}`);
@@ -36,7 +36,7 @@ export async function fetchAliasDetail(aliasId) {
 /**
  * Resolve an alias into its cluster, intra-cluster confidence, and pairwise matches with evidence.
  */
-export async function resolveAlias(aliasId, threshold = 0.62, compareAll = false) {
+export async function resolveAlias(aliasId, threshold = 0.55, compareAll = false) {
   const res = await fetch(`${BASE_URL}/resolve/${aliasId}?threshold=${threshold}&compare_all=${compareAll}`);
   if (!res.ok) {
     throw new Error(`Failed to resolve alias ${aliasId}: ${res.statusText}`);

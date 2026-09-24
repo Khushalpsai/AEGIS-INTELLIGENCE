@@ -1,452 +1,318 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import {
-  ArrowLeft,
-  Search,
-  ChevronRight,
-  Fingerprint,
-  ShieldAlert,
-  CheckCircle2,
-  AlertTriangle,
-  FileSearch,
-  Download,
-  Terminal,
-  Clock,
-} from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { ArrowLeft, Search, ChevronRight, Fingerprint, ShieldAlert, FileSearch, Terminal, Clock, Download } from 'lucide-react';
 import { resolveAlias, fetchAliasDetail } from '../api/client';
-import html2pdf from 'html2pdf.js';
-
-// ── Temporal timeline ────────────────────────────────
+import { exportIntelligenceReport } from '../utils/exportPDF';
+// ── Temporal Timeline ────────────────────────────────
 function TemporalTimeline({ targetPosts, candidatePosts, targetId, candidateId }) {
   if (!targetPosts?.length || !candidatePosts?.length) return null;
+  const all = [...targetPosts, ...candidatePosts];
+  const ts = all.map(p => new Date(p.timestamp).getTime()).filter(t => !isNaN(t));
+  if (!ts.length) return null;
+  const min = Math.min(...ts), max = Math.max(...ts);
+  const pad = (max - min) * 0.1 || 86400000 * 7;
+  const start = min - pad, end = max + pad, range = end - start;
+  const pos = t => ((new Date(t).getTime() - start) / range) * 100;
 
-  const allPosts = [...targetPosts, ...candidatePosts];
-  const timestamps = allPosts.map(p => new Date(p.timestamp).getTime()).filter(t => !isNaN(t));
-  if (timestamps.length === 0) return null;
-
-  const minTime = Math.min(...timestamps);
-  const maxTime = Math.max(...timestamps);
-  const pad = (maxTime - minTime) * 0.1 || 86400000 * 7;
-  const start = minTime - pad;
-  const end = maxTime + pad;
-  const range = end - start;
-
-  const getPos = ts => ((new Date(ts).getTime() - start) / range) * 100;
-
-  const targetDates   = targetPosts.map(p => new Date(p.timestamp).getTime()).filter(t => !isNaN(t));
-  const candidateDates = candidatePosts.map(p => new Date(p.timestamp).getTime()).filter(t => !isNaN(t));
-  const overlapStart  = Math.max(Math.min(...targetDates), Math.min(...candidateDates));
-  const overlapEnd    = Math.min(Math.max(...targetDates), Math.max(...candidateDates));
-  const hasOverlap    = overlapStart <= overlapEnd;
+  const td = targetPosts.map(p => new Date(p.timestamp).getTime()).filter(t => !isNaN(t));
+  const cd = candidatePosts.map(p => new Date(p.timestamp).getTime()).filter(t => !isNaN(t));
+  const os = Math.max(Math.min(...td), Math.min(...cd));
+  const oe = Math.min(Math.max(...td), Math.max(...cd));
+  const overlap = os <= oe;
 
   return (
-    <div className="w-full space-y-2">
-      <div className="flex justify-between font-mono text-[10px] text-[#5a5568]">
+    <div className="space-y-1.5">
+      <div className="flex justify-between font-mono text-[9px] text-[#2a3340]">
         <span>{new Date(start).toLocaleDateString()}</span>
         <span>{new Date(end).toLocaleDateString()}</span>
       </div>
-
-      <div className="relative h-14 bg-[#141218] border border-[#2a2535] rounded-lg overflow-hidden">
-        {/* Overlap region */}
-        {hasOverlap && (
-          <div
-            className="absolute top-0 bottom-0 bg-amber-500/10 border-x border-amber-500/25"
-            style={{ left: `${getPos(overlapStart)}%`, width: `${getPos(overlapEnd) - getPos(overlapStart)}%` }}
-          />
+      <div className="relative h-12 bg-[#0a0b0d] border border-[#1e252e] overflow-hidden">
+        {overlap && (
+          <div className="absolute top-0 bottom-0 bg-[#00d4aa]/8 border-x border-[#00d4aa]/20"
+            style={{ left: `${pos(os)}%`, width: `${pos(oe) - pos(os)}%` }} />
         )}
-
-        {/* Centre divider */}
-        <div className="absolute top-1/2 left-0 right-0 h-px bg-[#2a2535]" />
-
+        <div className="absolute top-1/2 left-0 right-0 h-px bg-[#1e252e]" />
         {/* Target row */}
         <div className="absolute top-0 left-0 right-0 h-1/2">
-          <span className="absolute left-2 top-1 font-mono text-[9px] text-amber-500/50">{targetId}</span>
+          <span className="absolute left-1.5 top-0.5 font-mono text-[8px] text-[#00d4aa]/40">{targetId}</span>
           {targetPosts.map((p, i) => (
-            <div
-              key={`t-${i}`}
-              className="absolute top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-amber-400"
-              style={{ left: `${getPos(p.timestamp)}%` }}
-              title={new Date(p.timestamp).toLocaleDateString()}
-            />
+            <div key={i} className="absolute top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-[#00d4aa]"
+              style={{ left: `${pos(p.timestamp)}%` }} title={new Date(p.timestamp).toLocaleDateString()} />
           ))}
         </div>
-
         {/* Candidate row */}
         <div className="absolute bottom-0 left-0 right-0 h-1/2">
-          <span className="absolute left-2 bottom-1 font-mono text-[9px] text-rose-500/50">{candidateId}</span>
+          <span className="absolute left-1.5 bottom-0.5 font-mono text-[8px] text-[#f43f5e]/40">{candidateId}</span>
           {candidatePosts.map((p, i) => (
-            <div
-              key={`c-${i}`}
-              className="absolute top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-rose-400"
-              style={{ left: `${getPos(p.timestamp)}%` }}
-              title={new Date(p.timestamp).toLocaleDateString()}
-            />
+            <div key={i} className="absolute top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-[#f43f5e]"
+              style={{ left: `${pos(p.timestamp)}%` }} title={new Date(p.timestamp).toLocaleDateString()} />
           ))}
         </div>
       </div>
-
-      <div className="text-center">
-        {hasOverlap ? (
-          <span className="font-mono text-[10px] text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-lg">
-            Concurrent Activity Overlap Detected
-          </span>
-        ) : (
-          <span className="font-mono text-[10px] text-[#9d98aa] bg-[#1a1720] border border-[#2a2535] px-2.5 py-1 rounded-lg">
-            Sequential Handover — No Overlap
-          </span>
-        )}
+      <div className="font-mono text-[9px] text-center">
+        {overlap
+          ? <span className="text-[#00d4aa] border border-[#00d4aa]/20 bg-[#00d4aa]/5 px-2 py-0.5">● CONCURRENT ACTIVITY OVERLAP DETECTED</span>
+          : <span className="text-[#5a6a7a] border border-[#1e252e] px-2 py-0.5">— SEQUENTIAL HANDOVER / NO OVERLAP</span>
+        }
       </div>
     </div>
   );
 }
 
-// ── Step pill ────────────────────────────────────────
-function StepPill({ n, label, active, done }) {
-  return (
-    <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full border font-mono text-[11px] font-bold transition-colors ${
-      done  ? 'border-emerald-500/40 text-emerald-400 bg-emerald-500/10' :
-      active ? 'border-amber-500/50 text-amber-400 bg-amber-500/10' :
-               'border-[#2a2535] text-[#5a5568]'
-    }`}>
-      {done ? <CheckCircle2 className="w-3 h-3" /> : <span>{n}.</span>}
-      {label}
-    </div>
-  );
-}
-
-// ── Metric bar ────────────────────────────────────────
+// ── Metric bar ───────────────────────────────────────
 function MetricBar({ label, pct, color }) {
+  const v = Math.max(0, Math.min(100, pct));
   return (
-    <div className="space-y-1">
-      <div className="flex justify-between font-mono text-xs">
-        <span className="text-[#9d98aa]">{label}</span>
-        <span className="font-bold" style={{ color }}>{Math.max(0, Math.min(100, pct)).toFixed(0)}%</span>
+    <div className="py-1.5 border-b border-[#1e252e]">
+      <div className="flex justify-between mb-1">
+        <span className="font-mono text-[10px] text-[#5a6a7a]">{label}</span>
+        <span className="font-mono text-[10px] font-bold" style={{ color }}>{v.toFixed(0)}%</span>
       </div>
-      <div className="h-1.5 bg-[#1a1720] rounded-full overflow-hidden">
-        <div
-          className="h-full rounded-full bar-fill"
-          style={{ width: `${Math.max(0, Math.min(100, pct))}%`, backgroundColor: color }}
-        />
+      <div className="h-px bg-[#1e252e] relative">
+        <div className="h-px bar-fill absolute left-0" style={{ width: `${v}%`, backgroundColor: color }} />
       </div>
     </div>
   );
 }
 
-// ── Main component ───────────────────────────────────
+// ── Step indicator ───────────────────────────────────
+function Step({ n, label, active, done }) {
+  return (
+    <div className={`flex items-center gap-1.5 font-mono text-[10px] px-3 py-1 border transition-colors ${
+      done   ? 'border-[#00d4aa]/30 text-[#00d4aa]/60 bg-[#00d4aa]/5' :
+      active ? 'border-[#00d4aa]/60 text-[#00d4aa]' :
+               'border-[#1e252e] text-[#2a3340]'
+    }`}>
+      {done ? '✓' : n} {label}
+    </div>
+  );
+}
+
 export default function InvestigationMode({ allNodes, onExit }) {
-  const [step, setStep]                       = useState(1);
+  const [step, setStep] = useState(1);
   const [selectedAliasId, setSelectedAliasId] = useState(null);
-  const [aliasDetail, setAliasDetail]         = useState(null);
-  const [candidates, setCandidates]           = useState([]);
-  const [isResolving, setIsResolving]         = useState(false);
+  const [aliasDetail, setAliasDetail] = useState(null);
+  const [candidates, setCandidates] = useState([]);
+  const [isResolving, setIsResolving] = useState(false);
   const [selectedCandidate, setSelectedCandidate] = useState(null);
-  const [reportGenerated, setReportGenerated] = useState(false);
-  const [searchQuery, setSearchQuery]         = useState('');
+  const [reportOpen, setReportOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const handleSelectAlias = async (nodeId) => {
     setSelectedAliasId(nodeId);
     setSelectedCandidate(null);
-    setReportGenerated(false);
+    setReportOpen(false);
     setStep(2);
     setIsResolving(true);
     try {
-      const [detail, resolution] = await Promise.all([
-        fetchAliasDetail(nodeId),
-        resolveAlias(nodeId, 0.0, true),
-      ]);
+      const [detail, res] = await Promise.all([fetchAliasDetail(nodeId), resolveAlias(nodeId, 0.0, true)]);
       setAliasDetail(detail);
-      const filtered = resolution.matches
-        .filter(m => m.score > 0.15)
-        .sort((a, b) => b.score - a.score);
-      setCandidates(filtered);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setIsResolving(false);
-    }
+      setCandidates(res.matches.filter(m => m.score > 0.15).sort((a, b) => b.score - a.score));
+    } catch (e) { console.error(e); }
+    finally { setIsResolving(false); }
   };
 
-  const handleSelectCandidate = async (candidate) => {
+  const handleSelectCandidate = async (c) => {
     setIsResolving(true);
     try {
-      const detail = await fetchAliasDetail(candidate.target_alias_id);
-      setSelectedCandidate({ ...candidate, detail });
+      const detail = await fetchAliasDetail(c.target_alias_id);
+      setSelectedCandidate({ ...c, detail });
       setStep(4);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setIsResolving(false);
-    }
+    } catch (e) { console.error(e); }
+    finally { setIsResolving(false); }
   };
 
-  const handleGenerateReport = () => {
-    setReportGenerated(true);
-    setStep(5);
+  const handleExportPDF = () => {
+    if (!selectedCandidate || !aliasDetail) return;
+    const year = new Date().getFullYear();
+    const caseId = `AEG-${year}-${String(Math.floor(Math.random() * 9000) + 1000)}`;
+    exportIntelligenceReport({
+      caseId,
+      targetId:          selectedAliasId,
+      targetUsername:    aliasDetail.username ?? selectedAliasId,
+      targetPosts:       aliasDetail.posts ?? [],
+      candidateId:       selectedCandidate.target_alias_id,
+      candidateUsername: selectedCandidate.target_username ?? selectedCandidate.target_alias_id,
+      candidatePosts:    selectedCandidate.detail?.posts ?? [],
+      confidence:        selectedCandidate.confidence_pct,
+      evidence:          selectedCandidate.evidence ?? {},
+    });
   };
 
-  const handleExportPDF = async () => {
-    const element = document.getElementById('report-content');
-    if (!element) return;
-
-    const opt = {
-      margin:      0.5,
-      filename:    `AEGIS-Report-${selectedAliasId}.pdf`,
-      image:       { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true, backgroundColor: '#0e0c0f', scrollY: 0 },
-      jsPDF:       { unit: 'in', format: 'letter', orientation: 'portrait' },
-    };
-
-    try {
-      await html2pdf().set(opt).from(element).save();
-      setReportGenerated(false);
-    } catch (err) {
-      console.error('PDF export error:', err);
-    }
-  };
-
-  const filteredNodes = allNodes.filter(
-    n =>
-      n.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      n.username.toLowerCase().includes(searchQuery.toLowerCase())
+  const filtered = allNodes.filter(n =>
+    n.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    n.username.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  return (
-    <div className="absolute inset-0 bg-[#09080a] z-40 flex flex-col overflow-hidden">
+  const confColor = pct => pct >= 80 ? '#00d4aa' : pct >= 65 ? '#38bdf8' : pct >= 40 ? '#fbbf24' : '#f43f5e';
 
-      {/* ── Header ──────────────────────────────── */}
-      <div className="flex-shrink-0 flex items-center justify-between px-5 py-3 border-b border-[#2a2535] bg-[#0e0c0f]">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={onExit}
-            className="p-2 bg-[#141218] hover:bg-[#1a1720] border border-[#2a2535] hover:border-[#3d3850] text-[#9d98aa] hover:text-[#eae6f0] rounded-lg transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" />
+  return (
+    <div className="absolute inset-0 bg-[#0a0b0d] z-40 flex flex-col overflow-hidden" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
+
+      {/* ── Header ── */}
+      <div className="flex-shrink-0 flex items-center justify-between px-5 py-2.5 border-b border-[#1e252e] bg-[#0e1012]">
+        <div className="flex items-center gap-4">
+          <button onClick={onExit} className="font-mono text-[11px] text-[#5a6a7a] hover:text-[#00d4aa] flex items-center gap-1.5 transition-colors">
+            <ArrowLeft className="w-3 h-3" /> BACK
           </button>
-          <div className="w-7 h-7 rounded bg-amber-500/10 border border-amber-500/25 flex items-center justify-center">
-            <FileSearch className="w-3.5 h-3.5 text-amber-400" />
-          </div>
-          <div>
-            <h2 className="font-mono text-sm font-bold text-[#eae6f0] uppercase tracking-wider">
-              Analyst Investigation Mode
-            </h2>
-            <p className="font-mono text-[10px] text-[#5a5568]">
-              Structured Threat Intelligence Workflow
-            </p>
+          <div className="h-4 w-px bg-[#1e252e]" />
+          <div className="flex items-center gap-2">
+            <div className="w-1 h-4 bg-[#00d4aa]" />
+            <span className="font-mono text-[11px] font-bold tracking-[0.15em] text-[#00d4aa]">INVESTIGATION MODE</span>
           </div>
         </div>
-
-        {/* Step pills */}
-        <div className="hidden md:flex items-center gap-2">
-          <StepPill n="1" label="Target"     active={step === 1} done={step > 1} />
-          <ChevronRight className="w-3.5 h-3.5 text-[#2a2535]" />
-          <StepPill n="2" label="Candidates" active={step === 2 || step === 3} done={step > 3} />
-          <ChevronRight className="w-3.5 h-3.5 text-[#2a2535]" />
-          <StepPill n="3" label="Evidence"   active={step === 4} done={step > 4} />
-          <ChevronRight className="w-3.5 h-3.5 text-[#2a2535]" />
-          <StepPill n="4" label="Report"     active={step === 5} done={false} />
+        {/* Step indicators */}
+        <div className="hidden md:flex items-center gap-1">
+          <Step n="01" label="TARGET"     active={step === 1} done={step > 1} />
+          <span className="text-[#1e252e] font-mono text-[10px]">›</span>
+          <Step n="02" label="CANDIDATES" active={step === 2 || step === 3} done={step > 3} />
+          <span className="text-[#1e252e] font-mono text-[10px]">›</span>
+          <Step n="03" label="EVIDENCE"   active={step === 4} done={step > 4} />
+          <span className="text-[#1e252e] font-mono text-[10px]">›</span>
+          <Step n="04" label="REPORT"     active={step === 5} done={false} />
         </div>
       </div>
 
-      {/* ── Workspace ───────────────────────────── */}
-      <div className="flex-1 flex gap-4 p-4 min-h-0 overflow-hidden">
+      {/* ── Workspace ── */}
+      <div className="flex-1 flex gap-0 min-h-0 overflow-hidden">
 
-        {/* ── Left column: target + candidates ──── */}
-        <div className="w-[280px] flex-shrink-0 flex flex-col gap-3 h-full">
+        {/* Left column */}
+        <div className="w-[260px] flex-shrink-0 flex flex-col border-r border-[#1e252e]">
 
-          {/* Target selection */}
-          <div className="flex-1 flex flex-col bg-[#0e0c0f] border border-[#2a2535] rounded-xl overflow-hidden min-h-0">
-            <div className="flex items-center gap-2 px-3.5 py-2.5 border-b border-[#2a2535] bg-[#141218] flex-shrink-0">
-              <span className="w-4 h-4 rounded-full bg-amber-500/20 border border-amber-500/40 flex items-center justify-center font-mono text-[9px] font-bold text-amber-400 flex-shrink-0">1</span>
-              <span className="font-mono text-[11px] font-bold uppercase tracking-widest text-[#9d98aa]">
-                Select Target Alias
-              </span>
+          {/* Step 1 */}
+          <div className="flex-1 flex flex-col min-h-0 border-b border-[#1e252e]">
+            <div className="flex items-center gap-2 px-3 py-2 border-b border-[#1e252e] bg-[#0e1012] flex-shrink-0">
+              <span className="font-mono text-[9px] text-[#00d4aa] border border-[#00d4aa]/30 px-1.5 py-0.5">01</span>
+              <span className="font-mono text-[9px] font-bold tracking-[0.15em] text-[#5a6a7a] uppercase">Select Target</span>
             </div>
-
-            <div className="p-3 border-b border-[#2a2535] flex-shrink-0">
+            <div className="p-2 border-b border-[#1e252e] flex-shrink-0">
               <div className="relative">
-                <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-[#5a5568]" />
+                <Search className="w-3 h-3 absolute left-2 top-1/2 -translate-y-1/2 text-[#2a3340]" />
                 <input
-                  type="text"
-                  placeholder="Search aliases..."
-                  value={searchQuery}
+                  type="text" placeholder="search aliases..." value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
-                  className="w-full bg-[#141218] border border-[#2a2535] focus:border-amber-500/50 rounded-lg pl-8 pr-3 py-1.5 text-xs text-[#eae6f0] placeholder-[#5a5568] font-mono outline-none transition-colors"
+                  className="w-full bg-[#0a0b0d] border border-[#1e252e] focus:border-[#00d4aa]/40 pl-7 pr-2 py-1.5 font-mono text-[11px] text-[#cdd6e0] placeholder-[#2a3340] outline-none"
                 />
               </div>
             </div>
-
-            <div className="flex-1 overflow-y-auto p-2 space-y-1">
-              {filteredNodes.map(n => {
-                const isSelected = selectedAliasId === n.id;
+            <div className="flex-1 overflow-y-auto">
+              {filtered.map(n => {
+                const isSel = selectedAliasId === n.id;
                 return (
-                  <button
-                    key={n.id}
-                    onClick={() => handleSelectAlias(n.id)}
-                    className={`w-full flex items-center justify-between px-3 py-2 rounded-lg border text-left transition-all ${
-                      isSelected
-                        ? 'bg-amber-500/10 border-amber-500/40'
-                        : 'bg-[#141218] hover:bg-[#1a1720] border-[#2a2535] hover:border-[#3d3850]'
-                    }`}
-                  >
-                    <div className="min-w-0">
-                      <span className="font-mono text-xs font-bold text-amber-400">{n.id}</span>
-                      <span className="font-mono text-xs text-[#5a5568] ml-1.5">@{n.username}</span>
-                    </div>
-                    {isSelected && <ChevronRight className="w-4 h-4 text-amber-400 flex-shrink-0" />}
+                  <button key={n.id} onClick={() => handleSelectAlias(n.id)}
+                    className={`w-full flex items-center gap-2 px-3 py-2 border-b border-[#1e252e] font-mono text-[11px] transition-colors ${
+                      isSel ? 'bg-[#00d4aa]/8 text-[#00d4aa] border-l-2 border-l-[#00d4aa]' : 'text-[#8899aa] hover:bg-[#12151a] hover:text-[#cdd6e0]'
+                    }`}>
+                    <span className={`text-[10px] w-8 flex-shrink-0 ${isSel ? 'text-[#00d4aa] font-bold' : 'text-[#5a6a7a]'}`}>{n.id}</span>
+                    <span className="truncate">@{n.username}</span>
+                    {isSel && <ChevronRight className="w-3 h-3 ml-auto flex-shrink-0" />}
                   </button>
                 );
               })}
             </div>
           </div>
 
-          {/* Candidates */}
-          <div className={`flex-1 flex flex-col bg-[#0e0c0f] border border-[#2a2535] rounded-xl overflow-hidden min-h-0 transition-opacity ${step >= 2 ? 'opacity-100' : 'opacity-30 pointer-events-none'}`}>
-            <div className="flex items-center gap-2 px-3.5 py-2.5 border-b border-[#2a2535] bg-[#141218] flex-shrink-0">
-              <span className="w-4 h-4 rounded-full bg-amber-500/20 border border-amber-500/40 flex items-center justify-center font-mono text-[9px] font-bold text-amber-400 flex-shrink-0">2</span>
-              <span className="font-mono text-[11px] font-bold uppercase tracking-widest text-[#9d98aa]">
-                System Candidates
-              </span>
+          {/* Step 2 */}
+          <div className={`flex-1 flex flex-col min-h-0 transition-opacity ${step >= 2 ? 'opacity-100' : 'opacity-20 pointer-events-none'}`}>
+            <div className="flex items-center gap-2 px-3 py-2 border-b border-[#1e252e] bg-[#0e1012] flex-shrink-0">
+              <span className="font-mono text-[9px] text-[#38bdf8] border border-[#38bdf8]/30 px-1.5 py-0.5">02</span>
+              <span className="font-mono text-[9px] font-bold tracking-[0.15em] text-[#5a6a7a] uppercase">Candidates</span>
             </div>
-
-            <div className="flex-1 overflow-y-auto p-2">
+            <div className="flex-1 overflow-y-auto">
               {isResolving ? (
-                <div className="h-full flex flex-col items-center justify-center gap-2 text-amber-500">
-                  <Fingerprint className="w-7 h-7 animate-pulse" />
-                  <span className="font-mono text-xs">Correlating vectors...</span>
+                <div className="flex flex-col items-center justify-center h-full gap-2 text-[#00d4aa]/40">
+                  <Fingerprint className="w-6 h-6 animate-pulse" />
+                  <span className="font-mono text-[9px]">CORRELATING...</span>
                 </div>
-              ) : (
-                <div className="space-y-1.5">
-                  {candidates.map(c => {
-                    const isSelected = selectedCandidate?.target_alias_id === c.target_alias_id;
-                    const confColor =
-                      c.confidence_pct >= 80 ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/25' :
-                      c.confidence_pct >= 65 ? 'text-amber-400 bg-amber-500/10 border-amber-500/25' :
-                                               'text-rose-400 bg-rose-500/10 border-rose-500/25';
-                    return (
-                      <button
-                        key={c.target_alias_id}
-                        onClick={() => handleSelectCandidate(c)}
-                        className={`w-full text-left px-3 py-2.5 rounded-lg border transition-all ${
-                          isSelected
-                            ? 'bg-amber-500/10 border-amber-500/40'
-                            : 'bg-[#141218] hover:bg-[#1a1720] border-[#2a2535] hover:border-[#3d3850]'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between mb-0.5">
-                          <span className="font-mono text-xs font-bold text-[#eae6f0]">
-                            {c.target_alias_id}
-                          </span>
-                          <span className={`font-mono text-[10px] font-bold px-1.5 py-0.5 rounded border ${confColor}`}>
-                            {c.confidence_pct}%
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between text-[10px] text-[#5a5568] font-mono">
-                          <span>@{c.target_username}</span>
-                          <span>{c.confidence_label || (c.confidence_pct >= 80 ? 'High' : c.confidence_pct >= 65 ? 'Probable' : 'Possible')}</span>
-                        </div>
-                      </button>
-                    );
-                  })}
-                  {candidates.length === 0 && selectedAliasId && (
-                    <div className="py-8 text-center font-mono text-xs text-[#5a5568]">
-                      No candidates above threshold.
+              ) : candidates.map(c => {
+                const isSel = selectedCandidate?.target_alias_id === c.target_alias_id;
+                const cc = confColor(c.confidence_pct);
+                return (
+                  <button key={c.target_alias_id} onClick={() => handleSelectCandidate(c)}
+                    className={`w-full text-left px-3 py-2 border-b border-[#1e252e] transition-colors ${
+                      isSel ? 'bg-[#00d4aa]/8 border-l-2 border-l-[#00d4aa]' : 'hover:bg-[#12151a]'
+                    }`}>
+                    <div className="flex items-center justify-between">
+                      <span className="font-mono text-[11px] font-bold text-[#cdd6e0]">{c.target_alias_id}</span>
+                      <span className="font-mono text-[10px] font-bold" style={{ color: cc }}>{c.confidence_pct}%</span>
                     </div>
-                  )}
-                </div>
+                    <div className="font-mono text-[9px] text-[#5a6a7a] mt-0.5">
+                      @{c.target_username} · {c.confidence_pct >= 80 ? 'HIGH' : c.confidence_pct >= 65 ? 'PROBABLE' : 'POSSIBLE'}
+                    </div>
+                  </button>
+                );
+              })}
+              {candidates.length === 0 && selectedAliasId && !isResolving && (
+                <div className="font-mono text-[9px] text-[#2a3340] text-center py-8">NO CANDIDATES</div>
               )}
             </div>
           </div>
         </div>
 
-        {/* ── Right column: evidence ───────────── */}
-        <div className={`flex-1 flex flex-col bg-[#0e0c0f] border border-[#2a2535] rounded-xl overflow-hidden transition-opacity ${step >= 4 ? 'opacity-100' : 'opacity-30 pointer-events-none'}`}>
-          <div className="flex items-center justify-between px-4 py-2.5 border-b border-[#2a2535] bg-[#141218] flex-shrink-0">
+        {/* Right column: evidence */}
+        <div className={`flex-1 flex flex-col min-h-0 transition-opacity ${step >= 4 ? 'opacity-100' : 'opacity-20 pointer-events-none'}`}>
+          <div className="flex items-center justify-between px-4 py-2 border-b border-[#1e252e] bg-[#0e1012] flex-shrink-0">
             <div className="flex items-center gap-2">
-              <span className="w-4 h-4 rounded-full bg-amber-500/20 border border-amber-500/40 flex items-center justify-center font-mono text-[9px] font-bold text-amber-400 flex-shrink-0">3</span>
-              <span className="font-mono text-[11px] font-bold uppercase tracking-widest text-[#9d98aa]">
-                Evidence Comparison
-              </span>
+              <span className="font-mono text-[9px] text-[#a78bfa] border border-[#a78bfa]/30 px-1.5 py-0.5">03</span>
+              <span className="font-mono text-[9px] font-bold tracking-[0.15em] text-[#5a6a7a] uppercase">Evidence Comparison</span>
             </div>
             {selectedCandidate && (
-              <button
-                onClick={handleGenerateReport}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-black font-mono text-xs font-bold rounded-lg transition-all active:scale-[0.97]"
-              >
-                <FileSearch className="w-3 h-3" />
-                Generate Report
+              <button onClick={() => { setReportOpen(true); setStep(5); }}
+                className="font-mono text-[10px] text-[#00d4aa] border border-[#00d4aa]/40 hover:border-[#00d4aa] hover:bg-[#00d4aa]/5 px-3 py-1 transition-all flex items-center gap-1.5">
+                <FileSearch className="w-3 h-3" /> GENERATE REPORT
               </button>
             )}
           </div>
 
-          <div className="flex-1 overflow-y-auto p-5">
+          <div className="flex-1 overflow-y-auto p-4">
             {selectedCandidate ? (
-              <div className="space-y-6">
+              <div className="space-y-4">
 
-                {/* Entity header */}
+                {/* Subjects */}
                 <div className="flex items-center gap-4">
-                  <div className="flex-1 bg-[#141218] border border-[#2a2535] rounded-xl p-3.5 text-center">
-                    <div className="font-mono text-xl font-bold text-amber-400">{selectedAliasId}</div>
-                    <div className="font-mono text-xs text-[#5a5568] mt-0.5">@{aliasDetail?.username}</div>
+                  <div className="flex-1 border border-[#1e252e] p-3">
+                    <div className="font-mono text-base font-bold text-[#00d4aa]">{selectedAliasId}</div>
+                    <div className="font-mono text-[10px] text-[#5a6a7a]">@{aliasDetail?.username}</div>
                   </div>
-                  <div className="flex flex-col items-center gap-1 flex-shrink-0">
-                    <ShieldAlert className="w-5 h-5 text-rose-500" />
-                    <span className="font-mono text-[10px] text-[#5a5568]">vs</span>
-                    <span className="font-mono text-xs font-bold text-[#eae6f0]">{selectedCandidate.confidence_pct}%</span>
+                  <div className="text-center flex-shrink-0">
+                    <ShieldAlert className="w-5 h-5 text-[#f43f5e]/60 mx-auto mb-1" />
+                    <div className="font-mono text-[10px] font-bold" style={{ color: confColor(selectedCandidate.confidence_pct) }}>
+                      {selectedCandidate.confidence_pct}%
+                    </div>
                   </div>
-                  <div className="flex-1 bg-[#141218] border border-[#2a2535] rounded-xl p-3.5 text-center">
-                    <div className="font-mono text-xl font-bold text-rose-400">{selectedCandidate.target_alias_id}</div>
-                    <div className="font-mono text-xs text-[#5a5568] mt-0.5">@{selectedCandidate.target_username}</div>
+                  <div className="flex-1 border border-[#1e252e] p-3">
+                    <div className="font-mono text-base font-bold text-[#f43f5e]">{selectedCandidate.target_alias_id}</div>
+                    <div className="font-mono text-[10px] text-[#5a6a7a]">@{selectedCandidate.target_username}</div>
                   </div>
                 </div>
 
                 {/* Stylometric vectors */}
-                <div className="space-y-3">
-                  <h4 className="font-mono text-[10px] font-bold uppercase tracking-widest text-[#5a5568] border-b border-[#2a2535] pb-2">
-                    Stylometric Vectors
-                  </h4>
-                  <MetricBar
-                    label="Semantic Embedding Similarity"
-                    pct={selectedCandidate.confidence_pct}
-                    color="#f59e0b"
-                  />
-                  <MetricBar
-                    label={`Syntax Match (Sentence Δ ±${selectedCandidate.evidence?.sentence_length_delta ?? 0} wds)`}
-                    pct={Math.max(10, 100 - (selectedCandidate.evidence?.sentence_length_delta ?? 0) * 10)}
-                    color="#10b981"
-                  />
-                  <MetricBar
-                    label="Punctuation Profile Overlap"
-                    pct={(selectedCandidate.evidence?.punctuation_similarity ?? 0) * 100}
-                    color="#a78bfa"
-                  />
+                <div>
+                  <div className="font-mono text-[9px] font-bold tracking-[0.2em] text-[#5a6a7a] uppercase mb-2">Stylometric Vectors</div>
+                  <MetricBar label="Semantic Embedding Similarity" pct={selectedCandidate.confidence_pct} color="#00d4aa" />
+                  <MetricBar label={`Syntax Match (Sentence Δ ±${selectedCandidate.evidence?.sentence_length_delta ?? 0} wds)`}
+                    pct={Math.max(10, 100 - (selectedCandidate.evidence?.sentence_length_delta ?? 0) * 10)} color="#38bdf8" />
+                  <MetricBar label="Punctuation Profile Overlap"
+                    pct={(selectedCandidate.evidence?.punctuation_similarity ?? 0) * 100} color="#a78bfa" />
                 </div>
 
-                {/* Shared vocabulary */}
+                {/* N-Grams */}
                 <div>
-                  <h4 className="font-mono text-[10px] font-bold uppercase tracking-widest text-[#5a5568] border-b border-[#2a2535] pb-2 mb-3">
-                    Shared Vocabulary (N-Grams)
-                  </h4>
+                  <div className="font-mono text-[9px] font-bold tracking-[0.2em] text-[#5a6a7a] uppercase mb-2">Shared N-Grams</div>
                   {selectedCandidate.evidence?.shared_phrases?.length > 0 ? (
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-1">
                       {selectedCandidate.evidence.shared_phrases.map((p, i) => (
-                        <span
-                          key={i}
-                          className="px-2.5 py-1 bg-[#141218] border border-[#2a2535] rounded-lg font-mono text-xs text-[#9d98aa]"
-                        >
-                          "{p}"
-                        </span>
+                        <span key={i} className="font-mono text-[9px] text-[#5a6a7a] bg-[#0a0b0d] border border-[#1e252e] px-1.5 py-0.5">"{p}"</span>
                       ))}
                     </div>
                   ) : (
-                    <p className="font-mono text-xs text-[#5a5568] italic">No significant overlap detected.</p>
+                    <span className="font-mono text-[10px] text-[#2a3340]">No significant overlap detected.</span>
                   )}
                 </div>
 
-                {/* Temporal timeline */}
+                {/* Timeline */}
                 <div>
-                  <h4 className="font-mono text-[10px] font-bold uppercase tracking-widest text-[#5a5568] border-b border-[#2a2535] pb-2 mb-3">
-                    Temporal Activity Timeline
-                  </h4>
+                  <div className="font-mono text-[9px] font-bold tracking-[0.2em] text-[#5a6a7a] uppercase mb-2">Temporal Activity</div>
                   <TemporalTimeline
                     targetPosts={aliasDetail?.posts}
                     candidatePosts={selectedCandidate.detail?.posts}
@@ -457,122 +323,111 @@ export default function InvestigationMode({ allNodes, onExit }) {
 
               </div>
             ) : (
-              <div className="h-full flex flex-col items-center justify-center gap-3 text-[#5a5568]">
-                <Terminal className="w-8 h-8 opacity-30" />
-                <span className="font-mono text-xs">Select a candidate from Step 2 to compare evidence.</span>
+              <div className="h-full flex items-center justify-center">
+                <div className="text-center">
+                  <Terminal className="w-7 h-7 text-[#1e252e] mx-auto mb-2" />
+                  <span className="font-mono text-[10px] text-[#2a3340]">SELECT A CANDIDATE TO COMPARE</span>
+                </div>
               </div>
             )}
           </div>
         </div>
       </div>
 
-      {/* ── Report modal ────────────────────────── */}
+      {/* ── Report modal ── */}
       <AnimatePresence>
-        {reportGenerated && selectedCandidate && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="absolute inset-0 bg-[#09080a]/85 backdrop-blur-sm z-50 flex items-center justify-center p-8"
-          >
-            <motion.div
-              initial={{ opacity: 0, y: 24, scale: 0.97 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 24, scale: 0.97 }}
-              transition={{ type: 'spring', damping: 28, stiffness: 260 }}
-              className="bg-[#0e0c0f] border border-amber-500/30 rounded-2xl w-full max-w-xl overflow-hidden"
+        {reportOpen && selectedCandidate && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="absolute inset-0 bg-[#0a0b0d]/90 backdrop-blur-sm z-50 flex items-center justify-center p-8">
+            <motion.div initial={{ y: 16, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 16, opacity: 0 }}
+              transition={{ type: 'tween', duration: 0.15 }}
               id="report-content"
-            >
+              className="bg-[#0e1012] border border-[#1e252e] w-full max-w-lg overflow-hidden">
+
               {/* Report header */}
-              <div className="bg-[#141218] border-b border-[#2a2535] px-5 py-4 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-7 h-7 rounded-lg bg-amber-500/10 border border-amber-500/25 flex items-center justify-center">
-                    <FileSearch className="w-3.5 h-3.5 text-amber-400" />
-                  </div>
-                  <div>
-                    <h3 className="font-mono text-sm font-bold text-[#eae6f0]">
-                      THREAT INTELLIGENCE REPORT
-                    </h3>
-                    <p className="font-mono text-[10px] text-[#5a5568]">
-                      CASE ID: AEG-{new Date().getFullYear()}-{String(Math.floor(Math.random() * 9000) + 1000)}
-                    </p>
+              <div className="border-b border-[#1e252e] px-5 py-3 flex items-center justify-between bg-[#12151a]">
+                <div>
+                  <div className="font-mono text-xs font-bold text-[#cdd6e0] tracking-widest">THREAT INTELLIGENCE REPORT</div>
+                  <div className="font-mono text-[9px] text-[#5a6a7a]">
+                    CASE / AEG-{new Date().getFullYear()}-{String(Math.floor(Math.random() * 9000) + 1000)}
                   </div>
                 </div>
-                <button
-                  onClick={() => { setReportGenerated(false); setStep(4); }}
-                  data-html2canvas-ignore
-                  className="font-mono text-[11px] text-[#5a5568] hover:text-[#eae6f0] px-2.5 py-1 border border-[#2a2535] hover:border-[#3d3850] rounded-lg transition-colors"
-                >
-                  Close
+                <button onClick={() => { setReportOpen(false); setStep(4); }}
+                  className="font-mono text-[10px] text-[#5a6a7a] hover:text-[#cdd6e0] border border-[#1e252e] hover:border-[#2a3340] px-2.5 py-1 transition-colors">
+                  CLOSE
                 </button>
               </div>
 
               <div className="p-5 space-y-4">
-                {/* Classification banner */}
+                {/* Classification */}
                 {(() => {
-                  const conf = selectedCandidate.confidence_pct;
-                  const isHigh = conf >= 80;
-                  const color = isHigh ? 'border-rose-500/40 bg-rose-500/10 text-rose-400' : 'border-amber-500/40 bg-amber-500/10 text-amber-400';
-                  const label = isHigh ? '⚠ HIGH CONFIDENCE — SAME ACTOR' : conf >= 65 ? '◆ PROBABLE MATCH' : '◇ POSSIBLE MATCH';
+                  const pct = selectedCandidate.confidence_pct;
+                  const color = confColor(pct);
+                  const label = pct >= 80 ? '⚠ HIGH CONFIDENCE — SAME ACTOR' : pct >= 65 ? '◆ PROBABLE MATCH' : '◇ POSSIBLE MATCH';
                   return (
-                    <div className={`font-mono text-xs font-bold text-center py-2.5 rounded-lg border ${color}`}>
+                    <div className="font-mono text-[11px] font-bold text-center py-2 border" style={{ borderColor: `${color}40`, color, backgroundColor: `${color}08` }}>
                       {label}
                     </div>
                   );
                 })()}
 
-                {/* Subjects row */}
+                {/* Subjects */}
                 <div className="flex gap-3">
-                  <div className="flex-1 bg-[#141218] border border-[#2a2535] rounded-xl p-3 text-center">
-                    <div className="font-mono text-sm font-bold text-amber-400">{selectedAliasId}</div>
-                    <div className="font-mono text-[10px] text-[#5a5568] mt-0.5">Subject A</div>
+                  <div className="flex-1 border border-[#1e252e] p-3">
+                    <div className="font-mono text-sm font-bold text-[#00d4aa]">{selectedAliasId}</div>
+                    <div className="font-mono text-[9px] text-[#5a6a7a]">SUBJECT A</div>
                   </div>
-                  <div className="flex-1 bg-[#141218] border border-[#2a2535] rounded-xl p-3 text-center">
-                    <div className="font-mono text-sm font-bold text-amber-400">{selectedCandidate.target_alias_id}</div>
-                    <div className="font-mono text-[10px] text-[#5a5568] mt-0.5">Subject B</div>
+                  <div className="flex-1 border border-[#1e252e] p-3">
+                    <div className="font-mono text-sm font-bold text-[#00d4aa]">{selectedCandidate.target_alias_id}</div>
+                    <div className="font-mono text-[9px] text-[#5a6a7a]">SUBJECT B</div>
                   </div>
                 </div>
 
-                {/* Evidence summary */}
-                <div className="bg-[#141218] border border-[#2a2535] rounded-xl p-4 space-y-2.5">
-                  <h4 className="font-mono text-[10px] font-bold uppercase tracking-widest text-[#5a5568]">Key Findings</h4>
-
-                  {[
-                    { label: 'Vector Similarity', value: `${selectedCandidate.confidence_pct}%`, color: '#f59e0b' },
-                    { label: 'Sentence Length Δ', value: `±${selectedCandidate.evidence?.sentence_length_delta ?? 0} words`, color: '#10b981' },
-                    { label: 'Punctuation Overlap', value: `${((selectedCandidate.evidence?.punctuation_similarity ?? 0) * 100).toFixed(0)}%`, color: '#a78bfa' },
-                    { label: 'Shared N-Grams', value: `${selectedCandidate.evidence?.shared_phrases?.length ?? 0} phrases`, color: '#38bdf8' },
-                  ].map(({ label, value, color }) => (
-                    <div key={label} className="flex justify-between items-center text-xs font-mono">
-                      <span className="text-[#9d98aa]">{label}</span>
-                      <span className="font-bold" style={{ color }}>{value}</span>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Shared phrases */}
-                {selectedCandidate.evidence?.shared_phrases?.length > 0 && (
+                {/* Visual Evidence (Graphs & Timeline) */}
+                <div className="space-y-4">
+                  {/* Stylometric vectors */}
                   <div>
-                    <h4 className="font-mono text-[10px] font-bold uppercase tracking-widest text-[#5a5568] mb-2">Shared Vocabulary</h4>
-                    <div className="flex flex-wrap gap-1.5">
-                      {selectedCandidate.evidence.shared_phrases.slice(0, 8).map((p, i) => (
-                        <span key={i} className="font-mono text-[10px] px-2 py-1 bg-[#1a1720] border border-[#2a2535] rounded text-[#9d98aa]">
-                          "{p}"
-                        </span>
-                      ))}
-                    </div>
+                    <div className="font-mono text-[9px] font-bold tracking-[0.2em] text-[#5a6a7a] uppercase mb-2">Stylometric Vectors</div>
+                    <MetricBar label="Semantic Embedding Similarity" pct={selectedCandidate.confidence_pct} color="#00d4aa" />
+                    <MetricBar label={`Syntax Match (Sentence Δ ±${selectedCandidate.evidence?.sentence_length_delta ?? 0} wds)`}
+                      pct={Math.max(10, 100 - (selectedCandidate.evidence?.sentence_length_delta ?? 0) * 10)} color="#38bdf8" />
+                    <MetricBar label="Punctuation Profile Overlap"
+                      pct={(selectedCandidate.evidence?.punctuation_similarity ?? 0) * 100} color="#a78bfa" />
                   </div>
-                )}
+
+                  {/* N-Grams */}
+                  <div>
+                    <div className="font-mono text-[9px] font-bold tracking-[0.2em] text-[#5a6a7a] uppercase mb-2">Shared N-Grams</div>
+                    {selectedCandidate.evidence?.shared_phrases?.length > 0 ? (
+                      <div className="flex flex-wrap gap-1">
+                        {selectedCandidate.evidence.shared_phrases.map((p, i) => (
+                          <span key={i} className="font-mono text-[9px] text-[#5a6a7a] bg-[#0a0b0d] border border-[#1e252e] px-1.5 py-0.5">"{p}"</span>
+                        ))}
+                      </div>
+                    ) : (
+                      <span className="font-mono text-[10px] text-[#2a3340]">No significant overlap detected.</span>
+                    )}
+                  </div>
+
+                  {/* Timeline */}
+                  <div>
+                    <div className="font-mono text-[9px] font-bold tracking-[0.2em] text-[#5a6a7a] uppercase mb-2">Temporal Activity</div>
+                    <TemporalTimeline
+                      targetPosts={aliasDetail?.posts}
+                      candidatePosts={selectedCandidate.detail?.posts}
+                      targetId={selectedAliasId}
+                      candidateId={selectedCandidate.target_alias_id}
+                    />
+                  </div>
+                </div>
 
                 {/* Footer */}
-                <div className="flex items-center justify-between pt-2 border-t border-[#2a2535]">
-                  <span className="font-mono text-[10px] text-[#5a5568] flex items-center gap-1.5">
-                    <Clock className="w-3 h-3" />
-                    {new Date().toLocaleString()}
+                <div className="flex items-center justify-between pt-1 border-t border-[#1e252e]">
+                  <span className="font-mono text-[9px] text-[#2a3340] flex items-center gap-1.5">
+                    <Clock className="w-3 h-3" /> {new Date().toLocaleString()}
                   </span>
-                  <button onClick={handleExportPDF} data-html2canvas-ignore className="flex items-center gap-1.5 px-3 py-1.5 bg-[#141218] hover:bg-[#1a1720] border border-[#2a2535] hover:border-amber-500/30 text-[#9d98aa] hover:text-amber-400 font-mono text-xs rounded-lg transition-colors">
-                    <Download className="w-3 h-3" />
-                    Export PDF
+                  <button onClick={handleExportPDF} className="font-mono text-[10px] text-[#5a6a7a] hover:text-[#cdd6e0] border border-[#1e252e] hover:border-[#2a3340] px-3 py-1.5 flex items-center gap-1.5 transition-colors">
+                    <Download className="w-3 h-3" /> EXPORT PDF
                   </button>
                 </div>
               </div>
