@@ -57,7 +57,7 @@ export async function fetchExplanation(aliasA, aliasB) {
 }
 
 /**
- * Fetch the full NxN pairwise similarity matrix with alias labels.
+ * NxN pairwise similarity matrix with alias labels.
  * Used by the SimilarityHeatmap component.
  */
 export async function fetchHeatmap() {

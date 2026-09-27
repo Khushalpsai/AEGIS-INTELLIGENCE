@@ -8,7 +8,7 @@ from app.routers import aliases, graph
 app = FastAPI(
     title="Dark-Web Threat Actor Identity Resolution API",
     version="1.0.0",
-    description="Backend API serving precomputed stylometric embeddings, similarity graph, cluster resolution, and staged alias injection."
+    description="Backend API serving precomputed stylometric embeddings, similarity graph, and cluster resolution."
 )
 
 # Enable CORS for local React dev server
@@ -37,10 +37,11 @@ class SystemState:
     alias_ids: List[str] = []                    # list of all alias_ids in matrix order
     matrix: List[List[float]] = []               # NxN similarity matrix
     evidence_dict: Dict[str, dict] = {}          # "A1-A2" -> evidence obj
-    
-    # Active vs staged pool for demo
+
+    # Active alias set
     active_alias_ids: Set[str] = set()
-    staged_inject_pool: List[str] = []
+
+
 
 state = SystemState()
 
@@ -55,8 +56,7 @@ def load_dataset():
     state.alias_ids = state.similarity_data["alias_ids"]
     state.matrix = state.similarity_data["matrix"]
     state.evidence_dict = state.similarity_data.get("evidence", {})
-    state.staged_inject_pool = state.personas_raw.get("staged_inject_aliases", [])
-    
+
     for idx, aid in enumerate(state.alias_ids):
         state.alias_id_to_idx[aid] = idx
 
@@ -74,7 +74,7 @@ def load_dataset():
                 state.active_alias_ids.add(aid)
 
     print(f"[STARTUP] Loaded {len(state.alias_ids)} total aliases.")
-    print(f"[STARTUP] Active aliases: {len(state.active_alias_ids)} | Staged injection pool: {state.staged_inject_pool}")
+    print(f"[STARTUP] Active aliases: {len(state.active_alias_ids)}")
 
 # Mount routers
 app.include_router(aliases.router, prefix="", tags=["Aliases"])
@@ -85,6 +85,5 @@ def root():
     return {
         "service": "Dark-Web Identity Resolution API",
         "status": "online",
-        "active_aliases": len(state.active_alias_ids),
-        "staged_aliases": state.staged_inject_pool
+        "active_aliases": len(state.active_alias_ids)
     }

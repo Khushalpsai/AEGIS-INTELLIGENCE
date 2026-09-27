@@ -65,8 +65,7 @@ export default function LandingPage({ onEnterDashboard }) {
       {/* ── Nav ── */}
       <header className="relative z-10 flex items-center justify-between px-8 py-4 border-b border-[#1e252e]">
         <div className="flex items-center gap-3">
-          <div className="w-1.5 h-5 bg-[#00d4aa]" />
-          <span className="font-mono text-xs font-bold tracking-[0.2em] text-[#00d4aa] uppercase">
+          <span className="font-mono text-xs font-bold tracking-[0.2em] text-[#5a6a7a] uppercase">
             AEGIS-INTELLIGENCE
           </span>
           <span className="font-mono text-[10px] text-[#2a3340] border border-[#1e252e] px-1.5 py-0.5">
@@ -145,7 +144,7 @@ export default function LandingPage({ onEnterDashboard }) {
         <span className="font-mono text-[10px] text-[#2a3340] tracking-widest uppercase">
           AEGIS // OSINT PLATFORM
         </span>
-        <span className="font-mono text-[10px] text-[#00d4aa]/40 tracking-widest">
+        <span className="font-mono text-[10px] text-[#2a3340] tracking-widest">
           ● SYS READY
         </span>
       </footer>
