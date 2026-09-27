@@ -93,17 +93,6 @@ npm run dev
 
 ---
 
-## Deployment (Cloudflare Pages)
-
-The frontend auto-deploys to Cloudflare Pages on every push to `main` via the GitHub Actions workflow at `.github/workflows/deploy.yml`.
-
-**Setup (one-time):**
-1. Create a Cloudflare Pages project named `aegis-intelligence`
-2. Add `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` as GitHub repository secrets
-3. Read `DEPLOYMENT.md` (local only, not in git) for the full step-by-step guide
-
----
-
 ## Tech Stack
 
 | Layer | Technologies |
