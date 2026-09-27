@@ -22,7 +22,6 @@ def get_aliases(include_staged: bool = False):
                 "platform": alias["platform"],
                 "post_count": len(alias.get("posts", [])),
                 "is_active": aid in state.active_alias_ids,
-                "is_staged": aid in state.staged_inject_pool and aid not in state.active_alias_ids
             })
             
     return {
@@ -46,6 +45,5 @@ def get_alias_detail(alias_id: str):
         "username": alias["username"],
         "platform": alias["platform"],
         "is_active": alias_id in state.active_alias_ids,
-        "is_staged": alias_id in state.staged_inject_pool,
         "posts": alias.get("posts", [])
     }

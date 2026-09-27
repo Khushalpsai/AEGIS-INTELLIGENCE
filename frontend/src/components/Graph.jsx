@@ -9,7 +9,7 @@ const CLUSTER_COLORS = [
   '#8b5cf6','#64748b',
 ];
 
-export default function Graph({ nodes=[], edges=[], clusters=[], selectedNode=null, selectedEdge=null, highlightCluster=null, injectedNodeId=null, onNodeClick, onEdgeClick, onBackgroundClick }) {
+export default function Graph({ nodes=[], edges=[], clusters=[], selectedNode=null, selectedEdge=null, highlightCluster=null, onNodeClick, onEdgeClick, onBackgroundClick }) {
   const fgRef = useRef();
   const containerRef = useRef();
   const [dims, setDims] = useState({ width: 800, height: 600 });
@@ -69,27 +69,17 @@ export default function Graph({ nodes=[], edges=[], clusters=[], selectedNode=nu
   const drawNode = useCallback((node, ctx, gs) => {
     const isSel  = selectedNode?.id === node.id;
     const isHov  = hoveredNode?.id === node.id;
-    const isInj  = injectedNodeId === node.id;
     const isHl   = highlightCluster && node.cluster_id === highlightCluster;
     const r      = isSel || isHov ? 12 : 9;
     const color  = colorMap[node.cluster_id] || '#00d4aa';
 
-    // Glow halo
-    if (isSel || isHov || isInj || isHl) {
-      const g = ctx.createRadialGradient(node.x, node.y, r, node.x, node.y, r + 14);
-      g.addColorStop(0, `${color}55`);
-      g.addColorStop(1, 'transparent');
+    // Selection / hover ring — clean solid stroke, no glow
+    if (isSel || isHov || isHl) {
       ctx.beginPath();
-      ctx.arc(node.x, node.y, r + 14, 0, 2 * Math.PI);
-      ctx.fillStyle = g;
-      ctx.fill();
-
-      // dashed ring
-      ctx.beginPath();
-      ctx.arc(node.x, node.y, r + 5, 0, 2 * Math.PI);
-      ctx.strokeStyle = color;
-      ctx.lineWidth = 1;
-      ctx.setLineDash([2, 3]);
+      ctx.arc(node.x, node.y, r + 4, 0, 2 * Math.PI);
+      ctx.strokeStyle = isSel ? color : `${color}66`;
+      ctx.lineWidth = isSel ? 1 : 0.75;
+      ctx.setLineDash(isSel ? [] : [2, 3]);
       ctx.stroke();
       ctx.setLineDash([]);
     }
@@ -115,14 +105,14 @@ export default function Graph({ nodes=[], edges=[], clusters=[], selectedNode=nu
     const platFs = Math.max(7 / gs, 7);
 
     ctx.font = `700 ${idFs}px 'JetBrains Mono', monospace`;
-    pill(ctx, node.id, node.x, node.y - r - 7, idFs, '#cdd6e0', 'rgba(10,11,13,0.94)', `${color}55`);
+    pill(ctx, node.id, node.x, node.y - r - 7, idFs, '#cdd6e0', 'rgba(10,11,13,0.94)', '#1e252e');
 
     ctx.font = `500 ${userFs}px 'JetBrains Mono', monospace`;
-    pill(ctx, `@${node.username}`, node.x, node.y + r + 8, userFs, '#8899aa', 'rgba(10,11,13,0.9)', '#1e252e');
+    pill(ctx, `@${node.username}`, node.x, node.y + r + 8, userFs, '#5a6a7a', 'rgba(10,11,13,0.9)', null);
 
     ctx.font = `600 ${platFs}px 'JetBrains Mono', monospace`;
-    pill(ctx, `[${node.platform}]`, node.x, node.y + r + 19, platFs, color, 'rgba(10,11,13,0.88)', null);
-  }, [selectedNode, hoveredNode, injectedNodeId, highlightCluster, colorMap]);
+    pill(ctx, `[${node.platform}]`, node.x, node.y + r + 19, platFs, `${color}bb`, 'rgba(10,11,13,0.88)', null);
+  }, [selectedNode, hoveredNode, highlightCluster, colorMap]);
 
   const drawLink = useCallback((link, ctx, gs) => {
     const isSel = selectedEdge && (
@@ -144,16 +134,12 @@ export default function Graph({ nodes=[], edges=[], clusters=[], selectedNode=nu
 
     if (isSel || isHov) {
       ctx.strokeStyle = '#00d4aa';
-      ctx.lineWidth = 2.5;
-      ctx.shadowColor = '#00d4aa';
-      ctx.shadowBlur = 6;
+      ctx.lineWidth = 2;
     } else {
       ctx.strokeStyle = `rgba(0, 212, 170, ${alpha})`;
-      ctx.lineWidth = 1 + norm * 1.8;
-      ctx.shadowBlur = 0;
+      ctx.lineWidth = 1 + norm * 1.5;
     }
     ctx.stroke();
-    ctx.shadowBlur = 0;
 
     if (gs > 1.3 || isSel || isHov) {
       const mx = (link.source.x + link.target.x) / 2;

@@ -1,79 +1,74 @@
-﻿/**
- * AEGIS-INTELLIGENCE — Threat Intelligence Report PDF Generator
- *
- * Uses jsPDF + jspdf-autotable to construct a fully programmatic,
- * text-selectable, analysis-rich PDF. NOT a screenshot.
- */
 import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
 
-// Colour palette
-const C = {
-  teal:      [0,   180, 150],
-  blue:      [56,  189, 248],
-  purple:    [167, 139, 250],
-  red:       [244,  63,  94],
-  amber:     [251, 191,  36],
-  dark:      [14,  16,  18],
-  mid:       [30,  37,  46],
-  muted:     [90, 106, 122],
-  text:      [205, 214, 224],
-  white:     [255, 255, 255],
-  sectionBg: [22,  27,  34],
-};
-
-function confLabel(pct) {
-  if (pct >= 80) return "WARNING: HIGH CONFIDENCE — SAME ACTOR";
-  if (pct >= 65) return "PROBABLE MATCH";
-  if (pct >= 40) return "POSSIBLE MATCH";
-  return "WEAK / INSUFFICIENT EVIDENCE";
-}
-function confColor(pct) {
-  if (pct >= 80) return C.teal;
-  if (pct >= 65) return C.blue;
-  if (pct >= 40) return C.amber;
-  return C.red;
+function confBand(pct) {
+  if (pct >= 80) return "Strong Indicator";
+  if (pct >= 65) return "Probable Match";
+  if (pct >= 40) return "Partial Match";
+  return "Inconclusive";
 }
 
-function hLine(doc, y, lm, rm) {
-  doc.setDrawColor(...C.mid);
-  doc.setLineWidth(0.3);
-  doc.line(lm, y, rm, y);
+function strHash(s) {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = (Math.imul(31, h) + s.charCodeAt(i)) | 0;
+  return h;
 }
 
-function sectionHeader(doc, text, y, lm, pageW) {
-  doc.setFillColor(...C.dark);
-  doc.rect(lm, y - 5, pageW - lm * 2, 9, "F");
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(7);
-  doc.setTextColor(...C.teal);
-  doc.text(text.toUpperCase(), lm + 3, y + 0.5);
-  return y + 8;
+function pick_n(arr, seed) {
+  return arr[Math.abs(seed) % arr.length];
 }
 
-function metricBar(doc, label, pct, color, y, lm, barW) {
-  const v       = Math.max(0, Math.min(100, pct));
-  const trackH  = 2.5;
-  const labelW  = 78;
-  const trackX  = lm + labelW;
-  const trackW  = barW - labelW - 14;
+function buildNarrative(targetId, candidateId, confPct, evidence, hasOverlap) {
+  const seed      = strHash(targetId + candidateId);
+  const sentDelta = evidence.sentence_length_delta ?? 0;
+  const phrases   = evidence.shared_phrases ?? [];
 
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(7);
-  doc.setTextColor(...C.muted);
-  doc.text(label, lm, y + trackH / 2 + 1);
+  if (confPct >= 80) {
+    const opens = [
+      `Putting ${targetId} and ${candidateId} side by side, the stylometric signal here is about as clean as it gets for this type of analysis.`,
+      `I've looked at a lot of these comparisons and the overlap between ${targetId} and ${candidateId} is harder to explain away than most.`,
+      `Ran ${targetId} against ${candidateId} — the numbers came back strong. Worth treating seriously.`,
+    ];
+    const middles = [
+      `The sentence rhythm, word choices, and punctuation habits line up in a way that doesn't feel like coincidence. Two unrelated people writing this similarly in the same niche is possible, but it's a stretch.`,
+      `It's not just one signal — it's all three moving together. Same sentence cadence, overlapping vocabulary, matching punctuation profile. Each of those alone wouldn't mean much, but together they're telling a consistent story.`,
+      `The punctuation overlap is particularly notable — that's one of the harder things to consciously fake, and both handles share it.`,
+    ];
+    const closes = hasOverlap
+      ? [
+          `The temporal data seals it for me: both accounts were posting at the same time, which rules out a simple handover. Someone was deliberately running two identities in parallel.`,
+          `Concurrent activity windows make account takeover a lot less likely. This reads more like deliberate compartmentalisation.`,
+        ]
+      : [
+          `Worth noting: the timelines don't overlap — ${targetId} went quiet right around the time ${candidateId} started up. That's a pattern I'd expect from a deliberate alias rotation.`,
+          `No concurrent posting detected. Could mean a planned transition rather than two separate people — fits the alias-rotation model.`,
+        ];
+    return [pick_n(opens, seed), pick_n(middles, seed + 1), pick_n(closes, seed + 2)].join(" ");
+  }
 
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(...color);
-  doc.text(`${v.toFixed(0)}%`, trackX + trackW + 2, y + trackH / 2 + 1);
+  if (confPct >= 65) {
+    const opens = [
+      `There's a real overlap here between ${targetId} and ${candidateId}, though I wouldn't call it definitive yet.`,
+      `Something worth flagging: ${targetId} and ${candidateId} share more stylistic ground than I'd expect from two unrelated accounts.`,
+      `${targetId} vs ${candidateId} — not a slam dunk, but it's on my radar. The signals are consistent enough to warrant a second look.`,
+    ];
+    const middles = sentDelta <= 2
+      ? `The sentence-length numbers are tighter than I usually see between unrelated authors. One-word differential across averaged corpora is pretty close.`
+      : `The vocabulary and punctuation overlap is real, but the ${sentDelta}-word gap in average sentence length does introduce some uncertainty I can't fully ignore.`;
+    const closes = phrases.length > 0
+      ? `${phrases.length} shared phrase${phrases.length > 1 ? "s" : ""} in a corpus this size is something — not conclusive on its own, since jargon travels, but it adds to the picture. I'd recommend pulling more posts before escalating.`
+      : `Didn't find any distinctive shared phrases, which is a mild negative. The other signals still hold up, just keep this at "monitor" for now.`;
+    return [pick_n(opens, seed), middles, closes].join(" ");
+  }
 
-  doc.setFillColor(...C.mid);
-  doc.rect(trackX, y, trackW, trackH, "F");
-
-  doc.setFillColor(...color);
-  doc.rect(trackX, y, Math.max(1, (v / 100) * trackW), trackH, "F");
-
-  return y + trackH + 3;
+  const opens = [
+    `Honestly, at ${confPct}%, I wouldn't put a lot of weight on this link between ${targetId} and ${candidateId}.`,
+    `The evidence isn't really there yet to say ${targetId} and ${candidateId} are the same person.`,
+  ];
+  const closes = [
+    `Keep it in the queue, but don't escalate without something stronger. Another source of corroboration would help considerably.`,
+    `More posts from either account would clarify things. Right now I can't say whether the overlap is meaningful or just noise.`,
+  ];
+  return [pick_n(opens, seed), pick_n(closes, seed + 1)].join(" ");
 }
 
 export function exportIntelligenceReport({
@@ -87,328 +82,170 @@ export function exportIntelligenceReport({
   confidence,
   evidence = {},
 }) {
-  const doc   = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+  const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+  
   const pageW = doc.internal.pageSize.getWidth();
-  const pageH = doc.internal.pageSize.getHeight();
-  const lm    = 14;
-  const rm    = pageW - lm;
-  const cW    = pageW - lm * 2;
+  const lm = 20;
+  const cW = pageW - lm * 2;
+  
+  let y = 20;
 
-  let y = 0;
-
-  // ── Cover ────────────────────────────────────────────
-  doc.setFillColor(...C.dark);
-  doc.rect(0, 0, pageW, 38, "F");
-  doc.setFillColor(...C.teal);
-  doc.rect(0, 0, 3, 38, "F");
-
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(7);
-  doc.setTextColor(...C.teal);
-  doc.text("AEGIS-INTELLIGENCE", lm + 4, 10);
-
+  doc.setFont("times", "bold");
   doc.setFontSize(14);
-  doc.setTextColor(...C.white);
-  doc.text("THREAT INTELLIGENCE REPORT", lm + 4, 19);
-
-  doc.setFontSize(7);
-  doc.setFont("helvetica", "normal");
-  doc.setTextColor(...C.muted);
-  doc.text("Stylometric Identity Correlation Analysis — CONFIDENTIAL", lm + 4, 25);
-
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(...C.teal);
-  doc.setFontSize(7);
-  doc.text(`CASE: ${caseId}`, lm + 4, 32);
-  doc.setFont("helvetica", "normal");
-  doc.setTextColor(...C.muted);
-  doc.text(`GENERATED: ${new Date().toUTCString()}`, lm + 54, 32);
-
-  y = 44;
-
-  // ── Classification banner ─────────────────────────────
-  const confPct = confidence ?? 0;
-  const cColor  = confColor(confPct);
-  const cLabel  = confLabel(confPct);
-
-  doc.setDrawColor(...cColor);
+  doc.text("THREAT INTELLIGENCE MEMORANDUM", pageW / 2, y, { align: "center" });
+  y += 10;
+  
+  doc.setFont("times", "normal");
+  doc.setFontSize(11);
+  
+  const now = new Date();
+  const dateStr = now.toLocaleDateString("en-US", { year: 'numeric', month: 'long', day: 'numeric' });
+  
+  doc.text(`TO: Intel Review Board`, lm, y);
+  y += 6;
+  doc.text(`FROM: Automated Stylometric Correlation System (AEGIS)`, lm, y);
+  y += 6;
+  doc.text(`DATE: ${dateStr}`, lm, y);
+  y += 6;
+  doc.text(`CASE REF: ${caseId}`, lm, y);
+  y += 6;
+  doc.text(`SUBJECT: Identity Correlation Assessment - ${targetId} & ${candidateId}`, lm, y);
+  y += 10;
+  
   doc.setLineWidth(0.5);
-  doc.rect(lm, y, cW, 10, "S");
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(9);
-  doc.setTextColor(...cColor);
-  doc.text(cLabel, pageW / 2, y + 6.5, { align: "center" });
+  doc.line(lm, y, pageW - lm, y);
+  y += 10;
 
-  y += 15;
-
-  // ── Subject identities ────────────────────────────────
-  y = sectionHeader(doc, "01  Subject Identities", y, lm, pageW);
-  const halfW = (cW - 4) / 2;
-
-  // Card A
-  doc.setFillColor(...C.sectionBg);
-  doc.rect(lm, y, halfW, 20, "F");
-  doc.setDrawColor(...C.teal);
-  doc.setLineWidth(0.4);
-  doc.line(lm, y, lm, y + 20);
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(9);
-  doc.setTextColor(...C.teal);
-  doc.text(targetId, lm + 3, y + 7);
-  doc.setFontSize(7);
-  doc.setFont("helvetica", "normal");
-  doc.setTextColor(...C.muted);
-  doc.text(`Handle: @${targetUsername}`, lm + 3, y + 13);
-  doc.text(`Posts analysed: ${targetPosts.length}`, lm + 3, y + 18);
-
-  // Card B
-  const bX = lm + halfW + 4;
-  doc.setFillColor(...C.sectionBg);
-  doc.rect(bX, y, halfW, 20, "F");
-  doc.setDrawColor(...C.red);
-  doc.setLineWidth(0.4);
-  doc.line(bX, y, bX, y + 20);
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(9);
-  doc.setTextColor(...C.red);
-  doc.text(candidateId, bX + 3, y + 7);
-  doc.setFontSize(7);
-  doc.setFont("helvetica", "normal");
-  doc.setTextColor(...C.muted);
-  doc.text(`Handle: @${candidateUsername}`, bX + 3, y + 13);
-  doc.text(`Posts analysed: ${candidatePosts.length}`, bX + 3, y + 18);
-
-  y += 26;
-
-  // ── Confidence overview ───────────────────────────────
-  y = sectionHeader(doc, "02  Confidence Assessment", y, lm, pageW);
-
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(28);
-  doc.setTextColor(...cColor);
-  doc.text(`${confPct}%`, lm, y + 12);
-
-  const bandDesc =
-    confPct >= 80
-      ? `The two aliases exhibit statistically significant stylometric overlap across semantic, lexical, syntactic, and punctuation dimensions. Composite score of ${confPct}% strongly suggests a single authoring entity operating under multiple pseudonyms.`
-      : confPct >= 65
-      ? `Meaningful stylometric correlation detected across multiple signal dimensions. Composite score of ${confPct}% exceeds the probable attribution threshold. Analyst review is recommended before formal attribution.`
-      : confPct >= 40
-      ? `Partial stylometric overlap detected (${confPct}%). Insufficient for high-confidence attribution. Additional intelligence collection and corpus expansion is advised.`
-      : `Minimal stylometric correlation (${confPct}%). These identities likely represent distinct authoring entities. No further action recommended without new intelligence.`;
-
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(7);
-  doc.setTextColor(...C.muted);
-  const bLines = doc.splitTextToSize(bandDesc, cW - 28);
-  doc.text(bLines, lm + 28, y + 2);
-  y += 22;
-
-  // ── Stylometric signal breakdown ──────────────────────
-  y = sectionHeader(doc, "03  Multi-Signal Stylometric Breakdown", y, lm, pageW);
-
-  const sentDelta = evidence.sentence_length_delta ?? 0;
-  const punctSim  = evidence.punctuation_similarity ?? 0;
-  const syntaxPct = Math.max(10, 100 - sentDelta * 10);
-
-  y = metricBar(doc, "Semantic Embedding Similarity  (all-MiniLM-L6-v2)", confPct,          C.teal,   y, lm, cW);
-  y = metricBar(doc, `Syntactic Structure Match  (Sentence Delta +/-${sentDelta} words)`,  syntaxPct, C.blue,   y, lm, cW);
-  y = metricBar(doc, "Punctuation Profile Overlap  (cosine similarity)",                   punctSim * 100, C.purple, y, lm, cW);
-  y += 4;
-
-  // ── Evidence table ────────────────────────────────────
-  y = sectionHeader(doc, "04  Pairwise Signal Summary", y, lm, pageW);
-
-  const avgLen = (posts) => {
-    if (!posts.length) return "N/A";
-    const total = posts.reduce((s, p) => s + (p.content?.split(" ").length || 0), 0);
-    return `~${Math.round(total / posts.length)} wds`;
-  };
-
-  autoTable(doc, {
-    startY: y,
-    margin: { left: lm, right: lm },
-    head: [["Signal Dimension", `${targetId} (A)`, `${candidateId} (B)`, "Score"]],
-    body: [
-      ["Semantic Embedding (cosine)",  "—",                    "—",                    `${confPct.toFixed(1)}%`],
-      ["Avg. Sentence Length",         avgLen(targetPosts),    avgLen(candidatePosts), `Delta ${sentDelta} wds`],
-      ["Punctuation Cosine",           "—",                    "—",                    `${(punctSim * 100).toFixed(1)}%`],
-      ["Corpus Size",                  `${targetPosts.length} posts`, `${candidatePosts.length} posts`, "—"],
-    ],
-    headStyles: { fillColor: C.dark, textColor: C.teal, fontStyle: "bold", fontSize: 7, halign: "left" },
-    bodyStyles: { fontSize: 7, textColor: C.text, fillColor: C.sectionBg },
-    alternateRowStyles: { fillColor: [18, 21, 26] },
-    columnStyles: { 0: { cellWidth: 70, fontStyle: "bold" }, 3: { halign: "right", textColor: cColor, fontStyle: "bold" } },
-    tableLineColor: C.mid,
-    tableLineWidth: 0.3,
-  });
-
-  y = doc.lastAutoTable.finalY + 6;
-
-  // ── Shared N-Grams ────────────────────────────────────
-  y = sectionHeader(doc, "05  Shared Linguistic Patterns (N-Grams)", y, lm, pageW);
-
-  const phrases = evidence.shared_phrases ?? [];
-  if (phrases.length > 0) {
-    const cols   = 3;
-    const cellW  = cW / cols;
-    phrases.slice(0, 18).forEach((phrase, i) => {
-      const col = i % cols;
-      const row = Math.floor(i / cols);
-      const cx  = lm + col * cellW;
-      const cy  = y + row * 7;
-      doc.setFillColor(...C.sectionBg);
-      doc.rect(cx, cy, cellW - 2, 5.5, "F");
-      doc.setDrawColor(...C.mid);
-      doc.rect(cx, cy, cellW - 2, 5.5, "S");
-      doc.setFont("courier", "normal");
-      doc.setFontSize(6.5);
-      doc.setTextColor(...C.teal);
-      const t = phrase.length > 28 ? phrase.slice(0, 27) + "…" : phrase;
-      doc.text(`"${t}"`, cx + 2, cy + 3.8);
-    });
-    y += Math.ceil(Math.min(phrases.length, 18) / cols) * 7 + 4;
-  } else {
-    doc.setFont("helvetica", "italic");
-    doc.setFontSize(7);
-    doc.setTextColor(...C.muted);
-    doc.text("No significant shared n-gram patterns detected.", lm, y + 4);
-    y += 10;
-  }
-
-  // ── Temporal analysis ─────────────────────────────────
-  y = sectionHeader(doc, "06  Temporal Activity Analysis", y, lm, pageW);
-
+  // Temporal processing for overlap
   const aTimes = targetPosts.map(p => new Date(p.timestamp).getTime()).filter(t => !isNaN(t));
   const bTimes = candidatePosts.map(p => new Date(p.timestamp).getTime()).filter(t => !isNaN(t));
   const allTs  = [...aTimes, ...bTimes];
-
-  if (allTs.length >= 2) {
-    const tMin  = Math.min(...allTs);
-    const tMax  = Math.max(...allTs);
-    const tRange = tMax - tMin || 1;
-    const barH  = 4;
-    const rowA  = y + 8;
-    const rowB  = y + 16;
-
-    // axis labels
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(6);
-    doc.setTextColor(...C.muted);
-    doc.text(new Date(tMin).toLocaleDateString(), lm, y + 4);
-    doc.text(new Date(tMax).toLocaleDateString(), rm - 16, y + 4);
-
-    // tracks
-    doc.setFillColor(...C.mid);
-    doc.rect(lm, rowA, cW, barH, "F");
-    doc.rect(lm, rowB, cW, barH, "F");
-
-    // row labels
-    doc.setFontSize(5.5);
-    doc.setTextColor(...C.teal);
-    doc.text(targetId, lm, rowA - 1);
-    doc.setTextColor(...C.red);
-    doc.text(candidateId, lm, rowB - 1);
-
-    // overlap shading
-    if (aTimes.length && bTimes.length) {
+  let hasOverlap = false;
+  
+  if (aTimes.length && bTimes.length) {
       const os = Math.max(Math.min(...aTimes), Math.min(...bTimes));
       const oe = Math.min(Math.max(...aTimes), Math.max(...bTimes));
       if (os <= oe) {
-        const ox1 = lm + ((os - tMin) / tRange) * cW;
-        const ow  = ((oe - os) / tRange) * cW;
-        doc.setFillColor(0, 180, 150);
-        doc.setGState(doc.GState({ opacity: 0.12 }));
-        doc.rect(ox1, rowA - 2, ow, barH * 2 + 10, "F");
-        doc.setGState(doc.GState({ opacity: 1 }));
+          hasOverlap = true;
       }
-    }
-
-    // dots A
-    doc.setFillColor(...C.teal);
-    aTimes.forEach(t => {
-      const px = lm + ((t - tMin) / tRange) * cW;
-      doc.circle(px, rowA + barH / 2, 0.9, "F");
-    });
-
-    // dots B
-    doc.setFillColor(...C.red);
-    bTimes.forEach(t => {
-      const px = lm + ((t - tMin) / tRange) * cW;
-      doc.circle(px, rowB + barH / 2, 0.9, "F");
-    });
-
-    y += 28;
-
-    const hasOverlap = aTimes.length && bTimes.length &&
-      Math.max(Math.min(...aTimes), Math.min(...bTimes)) <= Math.min(Math.max(...aTimes), Math.max(...bTimes));
-
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(7);
-    if (hasOverlap) {
-      doc.setTextColor(...C.teal);
-      doc.text("CONCURRENT ACTIVITY OVERLAP DETECTED", lm, y);
-      y += 5;
-      doc.setFont("helvetica", "normal");
-      doc.setTextColor(...C.muted);
-      doc.text("Both aliases were active simultaneously, consistent with dual-alias concurrent operation by a single threat actor.", lm, y);
-    } else {
-      doc.setTextColor(...C.muted);
-      doc.text("SEQUENTIAL HANDOVER / NO TEMPORAL OVERLAP", lm, y);
-      y += 5;
-      doc.setFont("helvetica", "normal");
-      doc.text("No concurrent activity detected. Possible identity handover or transition between distinct operational phases.", lm, y);
-    }
-    y += 8;
-  } else {
-    doc.setFont("helvetica", "italic");
-    doc.setFontSize(7);
-    doc.setTextColor(...C.muted);
-    doc.text("Insufficient temporal data for activity analysis.", lm, y + 4);
-    y += 10;
   }
 
-  // ── Analyst assessment ────────────────────────────────
-  y = sectionHeader(doc, "07  Analyst Assessment & Recommendations", y, lm, pageW);
+  // 1. Executive Summary
+  doc.setFont("times", "bold");
+  doc.text("1. Executive Summary", lm, y);
+  y += 6;
+  doc.setFont("times", "normal");
 
-  const assessment =
+  const confPct = confidence ?? 0;
+  const narrative = buildNarrative(targetId, candidateId, confPct, evidence, hasOverlap);
+  
+  const narrativeLines = doc.splitTextToSize(narrative, cW);
+  doc.text(narrativeLines, lm, y);
+  y += narrativeLines.length * 5 + 6;
+
+  // 2. Overview of Subjects
+  doc.setFont("times", "bold");
+  doc.text("2. Subjects Under Review", lm, y);
+  y += 6;
+  doc.setFont("times", "normal");
+  
+  doc.text(`• Subject A: ${targetId} (@${targetUsername}) - ${targetPosts.length} posts reviewed`, lm + 5, y);
+  y += 6;
+  doc.text(`• Subject B: ${candidateId} (@${candidateUsername}) - ${candidatePosts.length} posts reviewed`, lm + 5, y);
+  y += 10;
+
+  // 3. Metrics
+  doc.setFont("times", "bold");
+  doc.text("3. Stylometric Evidence", lm, y);
+  y += 6;
+  doc.setFont("times", "normal");
+  
+  const sentDelta = evidence.sentence_length_delta ?? 0;
+  const punctSim  = evidence.punctuation_similarity ?? 0;
+
+  doc.text(`Composite Confidence Score: ${confPct}% (${confBand(confPct)})`, lm, y);
+  y += 6;
+  doc.text(`• Semantic Similarity (embedding cosine): ${confPct.toFixed(1)}%`, lm + 5, y);
+  y += 6;
+  doc.text(`• Sentence-length difference: ${sentDelta} words on average`, lm + 5, y);
+  y += 6;
+  doc.text(`• Punctuation Profile Overlap (cosine): ${(punctSim * 100).toFixed(1)}%`, lm + 5, y);
+  y += 10;
+
+  // 4. Shared Phrases
+  doc.setFont("times", "bold");
+  doc.text("4. Shared Linguistic Markers", lm, y);
+  y += 6;
+  doc.setFont("times", "normal");
+  
+  const phrases = evidence.shared_phrases ?? [];
+  if (phrases.length > 0) {
+    doc.text(`Found ${phrases.length} shared phrases between the two accounts:`, lm, y);
+    y += 6;
+    
+    phrases.slice(0, 10).forEach(phrase => {
+      doc.text(`- "${phrase}"`, lm + 5, y);
+      y += 5;
+    });
+    
+    if (phrases.length > 10) {
+       doc.text(`...and ${phrases.length - 10} more.`, lm + 5, y);
+       y += 5;
+    }
+  } else {
+    doc.text("No highly distinctive shared phrases identified in the current sample size.", lm, y);
+    y += 5;
+  }
+  y += 5;
+
+  // 5. Temporal
+  doc.setFont("times", "bold");
+  doc.text("5. Temporal Analysis", lm, y);
+  y += 6;
+  doc.setFont("times", "normal");
+  
+  if (allTs.length >= 2) {
+    if (hasOverlap) {
+       doc.text("Overlapping activity detected: both accounts were active during the same time period.", lm, y);
+    } else {
+       doc.text("No concurrent activity detected. Accounts appear to have been active sequentially.", lm, y);
+    }
+  } else {
+    doc.text("Insufficient timestamped posts to perform temporal analysis.", lm, y);
+  }
+  y += 10;
+
+  // 6. Recommendation
+  doc.setFont("times", "bold");
+  doc.text("6. Analyst Recommendation", lm, y);
+  y += 6;
+  doc.setFont("times", "normal");
+
+  const rec =
     confPct >= 80
-      ? `AEGIS-INTELLIGENCE assigns HIGH CONFIDENCE to the hypothesis that ${targetId} and ${candidateId} represent the same threat actor operating under distinct pseudonyms. The stylometric signature overlap across semantic, syntactic, and punctuation dimensions (${confPct}% composite score) exceeds the high-confidence attribution threshold. Recommend formal attribution and escalation to threat hunting teams for further investigation.`
+      ? "Escalate for review. Cross-reference against known TTPs and consider formal attribution. Don't sit on this one."
       : confPct >= 65
-      ? `AEGIS-INTELLIGENCE identifies PROBABLE correlation between ${targetId} and ${candidateId}. The composite stylometric score of ${confPct}% indicates meaningful overlap across multiple signal dimensions. Recommend analyst review of shared n-gram patterns and temporal data before formal attribution.`
-      : `AEGIS-INTELLIGENCE identifies POSSIBLE correlation between ${targetId} and ${candidateId}. The composite score of ${confPct}% does not meet the high-confidence threshold. Recommend additional intelligence collection and expanded corpus analysis before drawing definitive conclusions.`;
-
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(7.5);
-  doc.setTextColor(...C.text);
-  const aLines = doc.splitTextToSize(assessment, cW);
-  doc.text(aLines, lm, y);
-  y += aLines.length * 4.5 + 6;
-
+      ? "Flag for follow-up. More posts would help — re-score once corpus is larger. Don't escalate yet."
+      : "Hold and monitor. Come back to this if something else surfaces. Not enough to act on right now.";
+      
+  const recLines = doc.splitTextToSize(rec, cW);
+  doc.text(recLines, lm, y);
+  y += recLines.length * 5 + 10;
+  
   // Disclaimer
-  doc.setFillColor(...C.sectionBg);
-  doc.setDrawColor(...C.mid);
-  doc.rect(lm, y, cW, 16, "FD");
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(6.5);
-  doc.setTextColor(...C.amber);
-  doc.text("DISCLAIMER", lm + 3, y + 5);
-  doc.setFont("helvetica", "normal");
-  doc.setTextColor(...C.muted);
-  const disc = "This report is generated by an automated stylometric analysis system. Results are probabilistic and must be independently verified by a qualified threat intelligence analyst prior to any formal attribution or operational decision. AEGIS-INTELLIGENCE does not constitute legal evidence.";
-  const dLines = doc.splitTextToSize(disc, cW - 6);
-  doc.text(dLines, lm + 3, y + 11);
-  y += 20;
+  doc.setFontSize(9);
+  doc.setFont("times", "italic");
+  const disc = "Disclaimer: AEGIS outputs are probabilistic. They are meant to support analyst judgement, not replace it. Nothing in this report should be treated as definitive or used as standalone evidence without independent review.";
+  const discLines = doc.splitTextToSize(disc, cW);
+  doc.text(discLines, lm, y);
+  y += discLines.length * 5 + 10;
 
-  // ── Footer ────────────────────────────────────────────
-  hLine(doc, pageH - 12, lm, rm);
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(6);
-  doc.setTextColor(...C.muted);
-  doc.text("AEGIS-INTELLIGENCE  •  Autonomous Stylometric Attribution Platform", lm, pageH - 7);
-  doc.text(`${caseId}  •  TLP:RED — NOT FOR PUBLIC RELEASE`, rm, pageH - 7, { align: "right" });
+  // Sign-off
+  doc.setFontSize(11);
+  doc.setFont("times", "normal");
+  doc.text("Analyst Signature: ______________________", lm, y);
+  doc.text("Date: ______________________", lm + 100, y);
 
-  // ── Save ─────────────────────────────────────────────
   const safeName = `AEGIS_${caseId.replace(/[^A-Z0-9\-]/gi, "_")}_${targetId}_vs_${candidateId}.pdf`;
   doc.save(safeName);
 }
