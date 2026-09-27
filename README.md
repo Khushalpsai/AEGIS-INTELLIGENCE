@@ -1,4 +1,4 @@
-﻿# AEGIS-INTELLIGENCE
+# AEGIS-INTELLIGENCE
 
 > **Autonomous Stylometric Attribution & Multi-Alias Threat Actor De-Anonymization Platform**
 
@@ -40,7 +40,7 @@ AEGIS-INTELLIGENCE/
 │   │   │   ├── SideSection.jsx          # Collapsible sidebar section
 │   │   │   └── InjectButton.jsx         # Live alias injection demo
 │   │   ├── utils/
-│   │   │   └── exportPDF.js             # Programmatic PDF report generator (jsPDF + autoTable)
+│   │   │   └── exportPDF.js             # Programmatic PDF report generator (jsPDF)
 │   │   ├── App.jsx                      # Main SOC dashboard layout
 │   │   └── index.css                    # Dark cyber theme & animations
 │   ├── package.json
@@ -84,7 +84,7 @@ npm run dev
 | **Dynamic Threshold Slider** | Live connected-components clustering from `0.30` to `0.95` (optimal: `0.62`) |
 | **"Explain This Link" Dossier** | Click any edge for a per-signal breakdown: Semantic, Lexical, Syntactic, Punctuation, Temporal |
 | **Analyst Investigation Mode** | 4-step workflow: Target → Candidates → Evidence Comparison → PDF Report |
-| **Proper PDF Export** | Programmatic jsPDF report with cover, confidence assessment, multi-signal bar charts, evidence table, shared n-grams, temporal timeline, and analyst recommendations — NOT a screenshot |
+| **Proper PDF Export** | Programmatic jsPDF report formatted as a formal intelligence memo with executive summary, stylometric evidence, shared linguistic markers, temporal analysis, and analyst recommendations. |
 | **Threat Actor Evolution Timeline** | Dual-track temporal visualizer showing concurrent vs. sequential alias activity |
 | **Confidence Scoring** | Raw scores translated to intelligence bands: Weak / Possible / Probable / High-Confidence |
 | **Staged Alias Injection** | Real-time live ingestion demo — inject held-back aliases and watch them cluster |
@@ -113,6 +113,6 @@ The frontend auto-deploys to Cloudflare Pages on every push to `main` via the Gi
 | Frontend | React 19, Vite, Tailwind CSS v4 |
 | Graph Engine | `react-force-graph-2d`, `d3-force` |
 | Animations | Framer Motion |
-| PDF Reports | jsPDF, jspdf-autotable |
+| PDF Reports | jsPDF |
 | Icons | Lucide React |
 | CI/CD | GitHub Actions → Cloudflare Pages (Wrangler) |

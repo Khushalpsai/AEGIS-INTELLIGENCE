@@ -242,7 +242,7 @@ Reads the precomputed `evidence_dict` entry for the pair. Derives lightweight li
 **Styling:** Tailwind CSS v4  
 **Graph rendering:** `react-force-graph-2d` (D3 force simulation, HTML5 Canvas)  
 **Animations:** Framer Motion (panel slide-in, presence transitions)  
-**PDF export:** jsPDF + jspdf-autotable
+**PDF export:** jsPDF
 
 ### 5.1 View Routing
 
@@ -317,15 +317,15 @@ Step 3 — Evidence Comparison
   GET /explain/{a}/{b}  →  signal breakdown + dual-track temporal activity timeline
 
 Step 4 — Intelligence Report
-  jsPDF A4 report:
-    - Cover page with case ID and timestamp
-    - Classification confidence banner
-    - Subject identity cards (Alias A / Alias B)
-    - Multi-signal bar chart (4 signals)
-    - Pairwise evidence table (autotable)
-    - Shared n-gram grid
-    - Temporal activity timeline
-    - Analyst recommendations + legal disclaimer
+  jsPDF A4 formal intelligence memo:
+    - Formal TO/FROM/DATE/SUBJECT header
+    - 1. Executive Summary with natural analyst narrative
+    - 2. Subjects Under Review
+    - 3. Stylometric Evidence (Semantic, Syntactic, Punctuation)
+    - 4. Shared Linguistic Markers (bulleted phrases)
+    - 5. Temporal Analysis
+    - 6. Analyst Recommendation
+    - Formal disclaimer and physical signature line
 ```
 
 ### 5.6 Threshold Slider (`ThresholdSlider.jsx`)

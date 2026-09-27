@@ -20,7 +20,7 @@ This document provides a consolidated list of all the new features and enhanceme
 - **Step 1: Target Selection**: Select an initial threat actor alias to investigate.
 - **Step 2: Candidate Correlation**: The system automatically generates a list of mathematically probable matching identities.
 - **Step 3: Evidence Comparison**: Side-by-side breakdown of why the system correlated them.
-- **Step 4: Intelligence Report Generation**: Automatically drafts a presentation-ready threat intelligence summary based on the findings.
+- **Step 4: Intelligence Report Generation**: Automatically drafts a presentation-ready, formal intelligence memo (PDF) based on the findings, formatted for internal intelligence review boards.
 
 ## 3. Threat Actor Evolution Timeline
 *A dual-track temporal visualizer built directly into the Evidence Comparison stage.*

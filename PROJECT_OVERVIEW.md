@@ -1,4 +1,4 @@
-﻿# AEGIS-INTELLIGENCE: Dark-Web Threat Actor Identity Resolution
+# AEGIS-INTELLIGENCE: Dark-Web Threat Actor Identity Resolution
 
 > **Autonomous Stylometric Attribution & Multi-Alias Threat Actor De-Anonymization Platform**
 
@@ -38,7 +38,7 @@ In the cyber threat landscape, malicious actors rarely operate under a single id
 | **Temporal Evolution Timeline** | Dual-track timeline showing whether aliases operated concurrently or represent a sequential identity handover |
 | **Confidence Scoring System** | Raw scores mapped to intelligence bands: Weak / Possible / Probable / High-Confidence |
 | **Staged Real-Time Ingestion** | Simulate live threat alias ingestion; new handles auto-resolve into their cluster |
-| **Structured PDF Report Export** | jsPDF-based programmatic intelligence reports with cover page, confidence assessment, multi-signal bar charts, evidence table, shared n-gram grid, temporal activity timeline, and analyst recommendations — NOT a screenshot |
+| **Structured PDF Report Export** | Programmatic jsPDF intelligence reports formatted as formal intelligence memos with an executive summary, stylometric evidence, temporal activity analysis, and analyst recommendations — NOT a screenshot |
 
 ---
 
@@ -109,17 +109,15 @@ All embeddings and pairwise evidence are precomputed offline into an N×N simila
   - Step 2: Candidate generation with confidence ranking
   - Step 3: Side-by-side stylometric + temporal evidence comparison
   - Step 4: Automated intelligence report → one-click PDF export
-- **PDF Report Export**: 7-section structured A4 report (jsPDF):
-  - Cover page with case ID and timestamp
-  - Classification confidence banner
-  - Subject identity cards
-  - Confidence assessment with narrative
-  - Multi-signal stylometric bar charts
-  - Pairwise evidence table (autoTable)
-  - Shared N-gram grid
-  - Temporal activity timeline with overlap analysis
-  - Analyst assessment & recommendations paragraph
-  - Legal disclaimer footer
+- **PDF Report Export**: Structured formal intelligence memo (jsPDF):
+  - Formal TO/FROM/DATE/SUBJECT header
+  - 1. Executive Summary with natural analyst narrative
+  - 2. Subjects Under Review
+  - 3. Stylometric Evidence (Semantic, Syntactic, Punctuation)
+  - 4. Shared Linguistic Markers (bulleted phrases)
+  - 5. Temporal Analysis
+  - 6. Analyst Recommendation
+  - Formal disclaimer and physical signature line
 - **Resolved Cluster Strip**: Glowing border-beam cards showing cluster ID, alias count, confidence
 
 ### CI/CD — Cloudflare Pages
@@ -139,7 +137,7 @@ All embeddings and pairwise evidence are precomputed offline into an N×N simila
 | **Frontend Framework** | React 19, Vite, Tailwind CSS v4 | High-performance SPA, custom dark cyber HUD theme |
 | **Network Visualization** | `react-force-graph-2d`, `d3-force` | Real-time physics simulation, canvas rendering |
 | **Motion & Animations** | `framer-motion` | Slide-in dossiers, border-beam cluster glow, state transitions |
-| **PDF Reports** | `jspdf`, `jspdf-autotable` | Programmatic A4 intelligence dossiers — not screenshots |
+| **PDF Reports** | `jspdf` | Programmatic A4 intelligence memos — not screenshots |
 | **Icons** | Lucide React | Cyber telemetry badges, HUD elements |
 | **CI/CD** | GitHub Actions, Cloudflare Wrangler | Auto-deploy on push to `main` → Cloudflare Pages CDN |
 
